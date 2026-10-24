@@ -4,6 +4,7 @@ import android.content.Context;
 import android.media.MediaScannerConnection;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.mobiiot.writerom.utils.StorageHelper;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CleanupManager {
 
@@ -19,17 +21,28 @@ public class CleanupManager {
         void onCleanupStarted();
         void onCleanupProgress(int deletedCount, long bytesReclaimed);
         void onCleanupCompleted(int totalDeleted, long totalBytesReclaimed);
+        void onCleanupStopped(int totalDeleted, long totalBytesReclaimed);
     }
 
     private final Context context;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final AtomicBoolean isCancelled = new AtomicBoolean(false);
 
     public CleanupManager(@NonNull Context context) {
         this.context = context.getApplicationContext();
     }
 
+    public void stopCleanup() {
+        isCancelled.set(true);
+    }
+
+    public boolean isCancelled() {
+        return isCancelled.get();
+    }
+
     public void cleanAllAsync(@Nullable CleanupCallback callback) {
+        isCancelled.set(false);
         if (callback != null) {
             mainHandler.post(callback::onCleanupStarted);
         }
@@ -38,9 +51,10 @@ public class CleanupManager {
             File dir = StorageHelper.getDedicatedStorageDir(context);
             int[] stats = new int[]{0}; // deletedCount
             long[] reclaimed = new long[]{0}; // bytesReclaimed
+            long[] lastReportTime = new long[]{SystemClock.elapsedRealtime()};
             List<String> deletedPaths = new ArrayList<>();
 
-            deleteRecursive(dir, dir, stats, reclaimed, deletedPaths, callback);
+            deleteRecursive(dir, dir, stats, reclaimed, lastReportTime, deletedPaths, callback);
 
             // 清理系统 MediaStore 中被删除文件的残留记录
             if (!deletedPaths.isEmpty()) {
@@ -57,21 +71,34 @@ public class CleanupManager {
 
             final int finalTotal = stats[0];
             final long finalBytes = reclaimed[0];
+            final boolean stopped = isCancelled.get();
             if (callback != null) {
-                mainHandler.post(() -> callback.onCleanupCompleted(finalTotal, finalBytes));
+                mainHandler.post(() -> {
+                    if (stopped) {
+                        callback.onCleanupStopped(finalTotal, finalBytes);
+                    } else {
+                        callback.onCleanupCompleted(finalTotal, finalBytes);
+                    }
+                });
             }
         });
     }
 
-    private void deleteRecursive(File root, File current, int[] stats, long[] reclaimed, List<String> deletedPaths, CleanupCallback callback) {
+    private void deleteRecursive(File root, File current, int[] stats, long[] reclaimed, long[] lastReportTime, List<String> deletedPaths, CleanupCallback callback) {
+        if (isCancelled.get()) return;
+
         File[] files = current.listFiles();
         if (files == null) return;
 
         for (File f : files) {
+            if (isCancelled.get()) break;
+
             if (f.isDirectory()) {
                 if (f.getName().startsWith("frag_bucket_") || f.getName().startsWith("temp_")) {
-                    deleteRecursive(root, f, stats, reclaimed, deletedPaths, callback);
-                    f.delete();
+                    deleteRecursive(root, f, stats, reclaimed, lastReportTime, deletedPaths, callback);
+                    if (!isCancelled.get()) {
+                        f.delete();
+                    }
                 }
             } else if (f.isFile()) {
                 String name = f.getName();
@@ -85,7 +112,15 @@ public class CleanupManager {
                             deletedPaths.add(path);
                         }
 
-                        if (callback != null && stats[0] % 100 == 0) {
+                        // 高频敏捷进度上报：前 10 个文件每删 1 个报 1 次；100 个以内每 5 个报 1 次；后续每 25 个或每 150ms 上报一次
+                        long now = SystemClock.elapsedRealtime();
+                        boolean shouldReport = (stats[0] <= 10)
+                                || (stats[0] <= 100 && stats[0] % 5 == 0)
+                                || (stats[0] % 25 == 0)
+                                || (now - lastReportTime[0] >= 150);
+
+                        if (callback != null && shouldReport) {
+                            lastReportTime[0] = now;
                             final int cCount = stats[0];
                             final long cBytes = reclaimed[0];
                             mainHandler.post(() -> callback.onCleanupProgress(cCount, cBytes));

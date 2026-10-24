@@ -43,6 +43,7 @@ fun StorageFillerScreen(
     onResume: () -> Unit,
     onStop: () -> Unit,
     onCleanAll: () -> Unit,
+    onStopClean: () -> Unit,
     onRequestStoragePermission: () -> Unit
 ) {
     Scaffold(
@@ -178,7 +179,8 @@ fun StorageFillerScreen(
                 onPause = onPause,
                 onResume = onResume,
                 onStop = onStop,
-                onCleanAll = onCleanAll
+                onCleanAll = onCleanAll,
+                onStopClean = onStopClean
             )
 
             Spacer(modifier = Modifier.height(24.dp))

@@ -30,6 +30,7 @@ object UiBridge {
         fun onResumeTask()
         fun onStopTask()
         fun onCleanAll()
+        fun onStopClean()
         fun onRequestStoragePermission()
     }
 
@@ -79,6 +80,7 @@ object UiBridge {
                         onResume = { cb.onResumeTask() },
                         onStop = { cb.onStopTask() },
                         onCleanAll = { cb.onCleanAll() },
+                        onStopClean = { cb.onStopClean() },
                         onRequestStoragePermission = { cb.onRequestStoragePermission() }
                     )
                 }

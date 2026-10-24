@@ -56,6 +56,8 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
 
     private boolean isCleaning = false;
     private int existingFilesCount = 0;
+    private int cleaningDeletedCount = 0;
+    private long cleaningReclaimedBytes = 0;
     private String statusMessage = "";
 
     private final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -214,6 +216,9 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
                 hasNotifPermission,
                 isCleaning,
                 existingFilesCount,
+                cleaningDeletedCount,
+                cleaningReclaimedBytes,
+                StorageHelper.formatSize(cleaningReclaimedBytes),
                 speedHistoryList,
                 currentProgress.getPeakSpeedMb(),
                 currentProgress.getAvgSpeedMb(),
@@ -423,6 +428,8 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
     @Override
     public void onCleanAll() {
         isCleaning = true;
+        cleaningDeletedCount = 0;
+        cleaningReclaimedBytes = 0;
         statusMessage = "正在清理释放所有填充数据...";
         updateUiState();
 
@@ -431,6 +438,8 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
             public void onCleanupStarted() {
                 runOnUiThread(() -> {
                     isCleaning = true;
+                    cleaningDeletedCount = 0;
+                    cleaningReclaimedBytes = 0;
                     updateUiState();
                 });
             }
@@ -438,6 +447,8 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
             @Override
             public void onCleanupProgress(int deletedCount, long bytesReclaimed) {
                 runOnUiThread(() -> {
+                    cleaningDeletedCount = deletedCount;
+                    cleaningReclaimedBytes = bytesReclaimed;
                     statusMessage = String.format("已清理 %d 个文件，释放 %s",
                             deletedCount, StorageHelper.formatSize(bytesReclaimed));
                     updateUiState();
@@ -448,6 +459,8 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
             public void onCleanupCompleted(int totalDeleted, long totalBytesReclaimed) {
                 runOnUiThread(() -> {
                     isCleaning = false;
+                    cleaningDeletedCount = totalDeleted;
+                    cleaningReclaimedBytes = totalBytesReclaimed;
                     statusMessage = String.format("清理完成！共删除 %d 个文件，成功释放 %s 空间",
                             totalDeleted, StorageHelper.formatSize(totalBytesReclaimed));
                     currentProgress = FillProgress.createIdle();
@@ -455,7 +468,29 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
                     Toast.makeText(MainActivity.this, statusMessage, Toast.LENGTH_LONG).show();
                 });
             }
+
+            @Override
+            public void onCleanupStopped(int totalDeleted, long totalBytesReclaimed) {
+                runOnUiThread(() -> {
+                    isCleaning = false;
+                    cleaningDeletedCount = totalDeleted;
+                    cleaningReclaimedBytes = totalBytesReclaimed;
+                    statusMessage = String.format("已停止清理！共删除 %d 个文件，已释放 %s 空间",
+                            totalDeleted, StorageHelper.formatSize(totalBytesReclaimed));
+                    refreshStorageAndFileCount();
+                    Toast.makeText(MainActivity.this, statusMessage, Toast.LENGTH_SHORT).show();
+                });
+            }
         });
+    }
+
+    @Override
+    public void onStopClean() {
+        if (cleanupManager != null && isCleaning) {
+            statusMessage = "正在停止清理...";
+            updateUiState();
+            cleanupManager.stopCleanup();
+        }
     }
 
     @Override

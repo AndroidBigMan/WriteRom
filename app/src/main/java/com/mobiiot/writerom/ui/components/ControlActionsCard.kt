@@ -29,6 +29,7 @@ fun ControlActionsCard(
     onResume: () -> Unit,
     onStop: () -> Unit,
     onCleanAll: () -> Unit,
+    onStopClean: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showCleanConfirmDialog by remember { mutableStateOf(false) }
@@ -143,28 +144,118 @@ fun ControlActionsCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 一键清理按钮（仅在未运行或已停止时允许）
-            val canClean = uiState.taskStatus != TaskStatus.RUNNING
-            OutlinedButton(
-                onClick = { showCleanConfirmDialog = true },
-                enabled = canClean && !uiState.isCleaning,
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = ErrorRed
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            ) {
-                if (uiState.isCleaning) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
-                        color = ErrorRed
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("正在全量释放清理中...", fontSize = 14.sp)
-                } else {
+            // 清理与空间释放控制
+            if (uiState.isCleaning) {
+                // 清理中状态面板：包含明确进度信息与停止清除按钮
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = ErrorRed.copy(alpha = 0.08f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, ErrorRed.copy(alpha = 0.25f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.5.dp,
+                                    color = ErrorRed
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "正在清理释放空间...",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+
+                            // 停止清理按钮
+                            Button(
+                                onClick = onStopClean,
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Stop Clean",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("停止清理", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // 进度与释放统计
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val countText = if (uiState.existingFillerFilesCount > 0) {
+                                "已清理 ${uiState.cleaningDeletedCount} / ${uiState.existingFillerFilesCount} 个文件"
+                            } else {
+                                "已清理 ${uiState.cleaningDeletedCount} 个文件"
+                            }
+                            Text(
+                                text = countText,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "已释放 ${uiState.formattedCleaningReclaimed}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // 动态进度条
+                        if (uiState.existingFillerFilesCount > 0) {
+                            val progress = (uiState.cleaningDeletedCount.toFloat() / uiState.existingFillerFilesCount.toFloat()).coerceIn(0f, 1f)
+                            LinearProgressIndicator(
+                                progress = { progress },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(6.dp),
+                                color = ErrorRed,
+                                trackColor = ErrorRed.copy(alpha = 0.2f),
+                            )
+                        } else {
+                            LinearProgressIndicator(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(6.dp),
+                                color = ErrorRed,
+                                trackColor = ErrorRed.copy(alpha = 0.2f),
+                            )
+                        }
+                    }
+                }
+            } else {
+                // 一键清理按钮（仅在未运行或已停止时允许）
+                val canClean = uiState.taskStatus != TaskStatus.RUNNING
+                OutlinedButton(
+                    onClick = { showCleanConfirmDialog = true },
+                    enabled = canClean,
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = ErrorRed
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                ) {
                     Icon(imageVector = Icons.Default.Delete, contentDescription = "Clean")
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(

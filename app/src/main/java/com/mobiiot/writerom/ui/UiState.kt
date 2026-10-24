@@ -58,6 +58,9 @@ data class StorageUiState @JvmOverloads constructor(
     val hasNotificationPermission: Boolean = true,
     val isCleaning: Boolean = false,
     val existingFillerFilesCount: Int = 0,
+    val cleaningDeletedCount: Int = 0,
+    val cleaningReclaimedBytes: Long = 0L,
+    val formattedCleaningReclaimed: String = "0 B",
 
     // v1.3: 性能衰减折线图 (Canvas) 与 SLC 缓存感知
     val speedHistory: List<Float> = emptyList(),
