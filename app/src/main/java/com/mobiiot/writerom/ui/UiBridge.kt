@@ -32,6 +32,8 @@ object UiBridge {
         fun onCleanAll()
         fun onStopClean()
         fun onRequestStoragePermission()
+        fun onFloatingHudToggle(enabled: Boolean)
+        fun onRequestOverlayPermission()
     }
 
     class BridgeController(
@@ -81,7 +83,9 @@ object UiBridge {
                         onStop = { cb.onStopTask() },
                         onCleanAll = { cb.onCleanAll() },
                         onStopClean = { cb.onStopClean() },
-                        onRequestStoragePermission = { cb.onRequestStoragePermission() }
+                        onRequestStoragePermission = { cb.onRequestStoragePermission() },
+                        onFloatingHudToggle = { cb.onFloatingHudToggle(it) },
+                        onRequestOverlayPermission = { cb.onRequestOverlayPermission() }
                     )
                 }
             }

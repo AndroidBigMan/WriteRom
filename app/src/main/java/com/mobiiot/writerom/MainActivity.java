@@ -30,6 +30,7 @@ import com.mobiiot.writerom.model.TaskStatus;
 import com.mobiiot.writerom.service.StorageFillerService;
 import com.mobiiot.writerom.ui.StorageUiState;
 import com.mobiiot.writerom.ui.UiBridge;
+import com.mobiiot.writerom.ui.hud.FloatingHudManager;
 import com.mobiiot.writerom.utils.HardwareMonitor;
 import com.mobiiot.writerom.utils.LifetimeStatsManager;
 import com.mobiiot.writerom.utils.StorageHelper;
@@ -41,6 +42,7 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
 
     private static final int REQUEST_CODE_NOTIF = 101;
     private static final int REQUEST_CODE_ALL_FILES = 102;
+    private static final int REQUEST_CODE_OVERLAY = 103;
 
     private ComposeView composeView;
     private UiBridge.BridgeController bridgeController;
@@ -103,7 +105,33 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
         startService(serviceIntent);
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
-        // 5. 权限与状态检查
+        // 5. 初始化全局悬浮窗管理器监听与自启判断
+        FloatingHudManager hudManager = FloatingHudManager.getInstance(this);
+        hudManager.setActionListener(new FloatingHudManager.HudActionListener() {
+            @Override
+            public void onTogglePause() {
+                if (currentProgress.getStatus() == TaskStatus.PAUSED) {
+                    onResumeTask();
+                } else if (currentProgress.getStatus() == TaskStatus.RUNNING) {
+                    onPauseTask();
+                }
+            }
+
+            @Override
+            public void onStopTask() {
+                MainActivity.this.onStopTask();
+            }
+
+            @Override
+            public void onHudVisibilityChanged(boolean isVisible) {
+                updateUiState();
+            }
+        });
+        if (hudManager.isHudEnabledPref() && hudManager.canDrawOverlays()) {
+            hudManager.showHud();
+        }
+
+        // 6. 权限与状态检查
         checkPermissions();
         refreshStorageAndFileCount();
     }
@@ -112,6 +140,11 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
     protected void onResume() {
         super.onResume();
         refreshStorageAndFileCount();
+        FloatingHudManager hudManager = FloatingHudManager.getInstance(this);
+        if (hudManager.isHudEnabledPref() && hudManager.canDrawOverlays() && !hudManager.isHudShown()) {
+            hudManager.showHud();
+        }
+        updateUiState();
     }
 
     @Override
@@ -228,12 +261,15 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
                 thermalLabel,
                 lifetimeBytes,
                 formattedLifetime,
-                estimatedPe
+                estimatedPe,
+                FloatingHudManager.getInstance(this).isHudShown(),
+                FloatingHudManager.getInstance(this).canDrawOverlays()
         );
 
         if (bridgeController != null) {
             bridgeController.updateState(uiState);
         }
+        FloatingHudManager.getInstance(this).updateState(uiState);
     }
 
     private boolean checkHasStoragePermission() {
@@ -507,6 +543,52 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_ALL_FILES);
+        }
+    }
+
+    @Override
+    public void onFloatingHudToggle(boolean enabled) {
+        FloatingHudManager hudManager = FloatingHudManager.getInstance(this);
+        if (enabled) {
+            if (!hudManager.canDrawOverlays()) {
+                onRequestOverlayPermission();
+            } else {
+                hudManager.showHud();
+            }
+        } else {
+            hudManager.hideHud();
+        }
+        updateUiState();
+    }
+
+    @Override
+    public void onRequestOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, REQUEST_CODE_OVERLAY);
+            } catch (Exception e) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                startActivityForResult(intent, REQUEST_CODE_OVERLAY);
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_OVERLAY) {
+            FloatingHudManager hudManager = FloatingHudManager.getInstance(this);
+            if (hudManager.canDrawOverlays()) {
+                hudManager.showHud();
+                Toast.makeText(this, "已获得悬浮窗权限，已开启微型仪表盘", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "未授予悬浮窗权限", Toast.LENGTH_SHORT).show();
+            }
+            updateUiState();
+        } else if (requestCode == REQUEST_CODE_ALL_FILES) {
+            refreshStorageAndFileCount();
         }
     }
 }

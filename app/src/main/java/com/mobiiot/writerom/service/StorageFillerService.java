@@ -22,6 +22,7 @@ import com.mobiiot.writerom.model.FillConfig;
 import com.mobiiot.writerom.model.FillProgress;
 import com.mobiiot.writerom.model.StorageInfo;
 import com.mobiiot.writerom.model.TaskStatus;
+import com.mobiiot.writerom.ui.hud.FloatingHudManager;
 
 public class StorageFillerService extends Service {
 
@@ -54,6 +55,29 @@ public class StorageFillerService extends Service {
         if (powerManager != null) {
             wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WriteRom::FillWakeLock");
         }
+
+        // 初始化悬浮窗后台控制监听（当 MainActivity 处于后台或暂停时接管控制）
+        FloatingHudManager.getInstance(this).setActionListener(new FloatingHudManager.HudActionListener() {
+            @Override
+            public void onTogglePause() {
+                if (fillEngine != null) {
+                    if (fillEngine.isPaused()) {
+                        resumeFill();
+                    } else if (fillEngine.isRunning()) {
+                        pauseFill();
+                    }
+                }
+            }
+
+            @Override
+            public void onStopTask() {
+                stopFill();
+            }
+
+            @Override
+            public void onHudVisibilityChanged(boolean isVisible) {
+            }
+        });
     }
 
     @Nullable
@@ -91,6 +115,7 @@ public class StorageFillerService extends Service {
                 if (fillEngine.isRunning() && (progress.getStatus() == TaskStatus.RUNNING || progress.getStatus() == TaskStatus.PAUSED)) {
                     updateNotification(progress);
                 }
+                FloatingHudManager.getInstance(StorageFillerService.this).updateProgress(progress, storageInfo);
                 if (externalListener != null) {
                     externalListener.onProgressUpdate(progress, storageInfo);
                 }

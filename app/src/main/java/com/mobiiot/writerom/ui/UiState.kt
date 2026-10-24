@@ -74,7 +74,11 @@ data class StorageUiState @JvmOverloads constructor(
     val thermalStatusLabel: String = "正常",
     val lifetimeBytesWritten: Long = 0L,
     val formattedLifetimeBytes: String = "0 B",
-    val estimatedPeCycles: Double = 0.0
+    val estimatedPeCycles: Double = 0.0,
+
+    // v1.4: 悬浮微型仪表盘 (Floating HUD)
+    val isFloatingHudEnabled: Boolean = false,
+    val hasOverlayPermission: Boolean = false
 ) {
     val effectiveWriteSpec: String
         get() = when {

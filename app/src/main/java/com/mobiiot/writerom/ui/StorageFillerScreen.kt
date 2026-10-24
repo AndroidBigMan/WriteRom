@@ -44,7 +44,9 @@ fun StorageFillerScreen(
     onStop: () -> Unit,
     onCleanAll: () -> Unit,
     onStopClean: () -> Unit,
-    onRequestStoragePermission: () -> Unit
+    onRequestStoragePermission: () -> Unit,
+    onFloatingHudToggle: (Boolean) -> Unit,
+    onRequestOverlayPermission: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -144,7 +146,14 @@ fun StorageFillerScreen(
             // 4. 闪存健康与芯片温控感知卡片 (v1.3 新增)
             HardwareHealthCard(uiState = uiState)
 
-            // 5. 填充阈值与策略设置卡片
+            // 5. 全局悬浮微型仪表盘卡片 (v1.4 新增)
+            com.mobiiot.writerom.ui.components.FloatingHudCard(
+                uiState = uiState,
+                onToggle = onFloatingHudToggle,
+                onRequestPermission = onRequestOverlayPermission
+            )
+
+            // 6. 填充阈值与策略设置卡片
             ThresholdConfigCard(
                 uiState = uiState,
                 onModeChange = onModeChange,
@@ -153,7 +162,7 @@ fun StorageFillerScreen(
                 onSpecificSizeChange = onSpecificSizeChange
             )
 
-            // 6. 填充内容类型设置卡片
+            // 7. 填充内容类型设置卡片
             ContentTypeCard(
                 uiState = uiState,
                 onContentTypeChange = onContentTypeChange,
@@ -163,7 +172,7 @@ fun StorageFillerScreen(
                 onMediaGalleryToggle = onMediaGalleryToggle
             )
 
-            // 7. 高级压测与并发设置卡片 (v1.2)
+            // 8. 高级压测与并发设置卡片 (v1.2)
             AdvancedStressCard(
                 uiState = uiState,
                 onConcurrencyChange = onConcurrencyChange,
@@ -172,7 +181,7 @@ fun StorageFillerScreen(
                 onPunchHolesToggle = onPunchHolesToggle
             )
 
-            // 8. 操作控制卡片（开始、暂停、停止、一键清理）
+            // 9. 操作控制卡片（开始、暂停、停止、一键清理）
             ControlActionsCard(
                 uiState = uiState,
                 onStart = onStart,

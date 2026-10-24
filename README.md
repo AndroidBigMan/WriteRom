@@ -94,7 +94,15 @@
 * **实时动态进度感知**：清理过程中展示直观的高频反馈看板，清晰呈现“已清理 X / Y 个文件”与“已释放 Z GB 空间”，配备确定型/平滑双模进度条，拒绝盲目等待。
 * **支持中途安全终止（停止清理）**：针对千万级微文件或海量占用耗时场景，提供醒目的 **【停止清理】** 红色操作按钮，采用原子线程信号安全即时中断递归删除，立即结算并保留已释放的空间成果。
 
-### 10. 专属定制微芯片图标
+### 10. 全局悬浮微型仪表盘 (Floating HUD) (v1.4 新增)
+* **跨 App 全局悬浮监控**：基于 Android 系统 `WindowManager` 与 Jetpack Compose 深度整合（通过 `FloatingHudLifecycleOwner` 独立生命周期桥接），允许用户在切至系统相机、相册或任意第三方被测 App 时，在屏幕任意位置置顶悬浮监控手机 ROM 剩余容量。
+* **二段式自适应形态**：
+  * **紧凑胶囊态（Mini-Pill）**：36dp 高度半透明深色磨砂药丸，呈现剩余空间、瞬时速率与红/橙/绿三级低存储警戒色彩，占屏极小、绝不遮挡被测应用关键操作；
+  * **展开微看板态（Expanded Card）**：单手点击即可原地展开，完整查看 ROM 占用进度条、并发线程数、芯片温度与温控等级，并提供 **【暂停 / 恢复】**、**【终止任务】** 与 **【返回应用】** 快捷操作。
+* **手势自由拖拽与智能贴边磁吸**：支持在屏幕全局任意手势拖拽位移，松手后根据屏幕中线自动执行减速贴边磁吸动画（`DecelerateInterpolator`），顺滑收纳至左/右边缘。
+* **后台数据零延迟双通道直连**：前台服务 `StorageFillerService` 与 Activity 双通道分发，即便宿主应用切至后台或息屏亮屏，悬浮看板依然毫秒级动态刷新。
+
+### 11. 专属定制微芯片图标
 * 配备全套 Android Adaptive Icon 自适应矢量图标与全密度位图（`mipmap-xxxhdpi` 等），适配现代 Android 系统的圆角、方形、圆形及单色桌面规范。
 
 ---
@@ -154,11 +162,16 @@ WriteRom/
 │   │   │   ├── service/         # [Java] 前台保活与多线程状态通知服务
 │   │   │   ├── ui/              # [Kotlin] ComposeView 桥接与 Material3 页面
 │   │   │   │   ├── components/  # [Kotlin] Bento仪表盘、高级压测卡片、折线图等
+│   │   │   │   │   ├── FloatingHudCard.kt      # v1.4 全局悬浮窗开关与配置卡片
 │   │   │   │   │   ├── PerformanceChartCard.kt # v1.3 Canvas 实时性能折线图与 SLC 耗尽
 │   │   │   │   │   ├── HardwareHealthCard.kt   # v1.3 闪存寿命与芯片温度感知
 │   │   │   │   │   ├── AdvancedStressCard.kt   # v1.2 压测并发与碎片化设置
 │   │   │   │   │   ├── LiveDashboardCard.kt    # 实时并发度与速率状态监控
 │   │   │   │   │   └── ...
+│   │   │   │   ├── hud/         # [Kotlin] 全局悬浮微型仪表盘 (Floating HUD) 引擎
+│   │   │   │   │   ├── FloatingHudManager.kt        # WindowManager 挂载、磁吸贴边与状态分发
+│   │   │   │   │   ├── FloatingHudComponent.kt      # 胶囊/展开双形态 Compose UI
+│   │   │   │   │   └── FloatingHudLifecycleOwner.kt # 独立 Window 宿主生命周期持有者
 │   │   │   │   └── theme/       # [Kotlin] 视觉色彩与主题
 │   │   │   ├── utils/           # [Java] 硬件监测、TBW寿命、StatFs 容量工具
 │   │   │   │   ├── HardwareMonitor.java
