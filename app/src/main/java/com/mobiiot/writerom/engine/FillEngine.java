@@ -7,6 +7,7 @@ import android.os.SystemClock;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.mobiiot.writerom.generator.FileGenerator;
+import com.mobiiot.writerom.generator.FragmentationGenerator;
 import com.mobiiot.writerom.generator.ImageGenerator;
 import com.mobiiot.writerom.generator.VideoGenerator;
 import com.mobiiot.writerom.model.FillConfig;
@@ -17,9 +18,12 @@ import com.mobiiot.writerom.model.TaskStatus;
 import com.mobiiot.writerom.utils.StorageHelper;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class FillEngine {
 
@@ -30,7 +34,8 @@ public class FillEngine {
 
     private final Context context;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService masterExecutor = Executors.newSingleThreadExecutor();
+    private ExecutorService workerPool;
 
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
     private final AtomicBoolean isPaused = new AtomicBoolean(false);
@@ -39,14 +44,17 @@ public class FillEngine {
     private volatile TaskStatus currentStatus = TaskStatus.IDLE;
     private OnProgressListener listener;
 
-    private long bytesWrittenTotal = 0;
-    private long targetTotalBytes = 0;
-    private int filesCreatedCount = 0;
-    private long startTimeMillis = 0;
-    private long lastSpeedSampleTime = 0;
-    private long lastSpeedSampleBytes = 0;
-    private double currentSpeed = 0;
-    private String currentFileName = "";
+    private final AtomicLong bytesWrittenTotal = new AtomicLong(0);
+    private final AtomicInteger filesCreatedCount = new AtomicInteger(0);
+    private final AtomicLong globalFileIndex = new AtomicLong(0);
+
+    private volatile long targetTotalBytes = 0;
+    private volatile int activeThreads = 1;
+    private volatile long startTimeMillis = 0;
+    private volatile long lastSpeedSampleTime = 0;
+    private volatile long lastSpeedSampleBytes = 0;
+    private volatile double currentSpeed = 0;
+    private volatile String currentFileName = "";
 
     public FillEngine(@NonNull Context context) {
         this.context = context.getApplicationContext();
@@ -79,17 +87,19 @@ public class FillEngine {
         isCancelled.set(false);
         currentStatus = TaskStatus.RUNNING;
 
-        bytesWrittenTotal = 0;
-        filesCreatedCount = 0;
+        bytesWrittenTotal.set(0);
+        filesCreatedCount.set(0);
+        globalFileIndex.set(0);
         currentSpeed = 0;
         currentFileName = "";
+        activeThreads = Math.max(1, Math.min(8, config.getConcurrencyThreads()));
         startTimeMillis = SystemClock.elapsedRealtime();
         lastSpeedSampleTime = startTimeMillis;
         lastSpeedSampleBytes = 0;
 
-        notifyStatusChanged(TaskStatus.RUNNING, "正在启动存储填充任务...");
+        notifyStatusChanged(TaskStatus.RUNNING, "正在启动存储填充任务 (" + activeThreads + " 线程 · " + config.getEffectiveWriteSpecLabel() + ")...");
 
-        executor.execute(() -> runFillTask(config));
+        masterExecutor.execute(() -> runFillTask(config));
     }
 
     public synchronized void pause() {
@@ -107,7 +117,7 @@ public class FillEngine {
             isPaused.set(false);
             currentStatus = TaskStatus.RUNNING;
             lastSpeedSampleTime = SystemClock.elapsedRealtime();
-            lastSpeedSampleBytes = bytesWrittenTotal;
+            lastSpeedSampleBytes = bytesWrittenTotal.get();
             notifyStatusChanged(TaskStatus.RUNNING, "任务已继续");
             dispatchProgress(StorageHelper.getStorageInfo(context));
         }
@@ -119,6 +129,9 @@ public class FillEngine {
             isPaused.set(false);
             currentStatus = TaskStatus.STOPPED;
             currentSpeed = 0;
+            if (workerPool != null) {
+                workerPool.shutdownNow();
+            }
             notifyStatusChanged(TaskStatus.STOPPED, "任务正在停止...");
             dispatchProgress(StorageHelper.getStorageInfo(context));
         }
@@ -138,10 +151,57 @@ public class FillEngine {
             return;
         }
 
+        final int threadCount = Math.max(1, Math.min(8, config.getConcurrencyThreads()));
+        activeThreads = threadCount;
+        workerPool = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        try {
+            for (int i = 0; i < threadCount; i++) {
+                final int workerId = i + 1;
+                workerPool.execute(() -> {
+                    try {
+                        runWorker(workerId, config, dir, initialStorage);
+                    } finally {
+                        latch.countDown();
+                    }
+                });
+            }
+
+            // 等待所有工作线程完成
+            latch.await();
+
+            isRunning.set(false);
+            if (isCancelled.get()) {
+                currentStatus = TaskStatus.STOPPED;
+                notifyStatusChanged(TaskStatus.STOPPED, "任务已由用户手动停止");
+            } else {
+                currentStatus = TaskStatus.COMPLETED;
+                StorageInfo finalStorage = StorageHelper.getStorageInfo(context);
+                String reason = finalStorage.getFreeBytes() <= 0 ? "ROM已极限填满 (磁盘满)" : "已达到设定的填充目标";
+                notifyStatusChanged(TaskStatus.COMPLETED, reason);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            currentStatus = TaskStatus.STOPPED;
+            notifyStatusChanged(TaskStatus.STOPPED, "任务被中断");
+        } catch (Exception e) {
+            isRunning.set(false);
+            currentStatus = TaskStatus.ERROR;
+            notifyStatusChanged(TaskStatus.ERROR, "填充出错: " + e.getMessage());
+        } finally {
+            if (workerPool != null && !workerPool.isShutdown()) {
+                workerPool.shutdownNow();
+            }
+            dispatchProgress(StorageHelper.getStorageInfo(context));
+        }
+    }
+
+    private void runWorker(int workerId, FillConfig config, File dir, StorageInfo initialStorage) {
         FileGenerator.ProgressCallback callback = new FileGenerator.ProgressCallback() {
             @Override
             public boolean shouldCancel() {
-                return isCancelled.get();
+                return isCancelled.get() || bytesWrittenTotal.get() >= targetTotalBytes;
             }
 
             @Override
@@ -151,138 +211,129 @@ public class FillEngine {
 
             @Override
             public void onBytesWritten(long deltaBytes) {
-                bytesWrittenTotal += deltaBytes;
-                long now = SystemClock.elapsedRealtime();
-                long timeDiff = now - lastSpeedSampleTime;
-
-                if (timeDiff >= 400) { // 每 400ms 刷新一次瞬时速度与实时存储状态
-                    long bytesDiff = bytesWrittenTotal - lastSpeedSampleBytes;
-                    currentSpeed = (bytesDiff * 1000.0) / (double) timeDiff;
-                    lastSpeedSampleTime = now;
-                    lastSpeedSampleBytes = bytesWrittenTotal;
-
-                    // 动态计算当前可用剩余空间，驱动手机 ROM 存储状态模块实时刷新
-                    long dynamicFree = Math.max(0, initialStorage.getFreeBytes() - bytesWrittenTotal);
-                    StorageInfo realTimeStorage = new StorageInfo(initialStorage.getTotalBytes(), dynamicFree);
-                    dispatchProgress(realTimeStorage);
-                }
+                recordBytesWritten(deltaBytes, initialStorage);
             }
         };
 
-        int fileIndex = 1;
-        String completionReason = "填充目标已达成";
-
-        try {
-            while (!isCancelled.get()) {
-                StorageInfo currentStorage = StorageHelper.getStorageInfo(context);
-
-                // 检查是否已达到目标
-                long remainingToFill = targetTotalBytes - bytesWrittenTotal;
-                if (remainingToFill <= 0 || currentStorage.getFreeBytes() <= 0) {
-                    completionReason = currentStorage.getFreeBytes() <= 0 ? "ROM已完全填满" : "已达到设定的填充目标";
-                    break;
-                }
-
-                while (isPaused.get() && !isCancelled.get()) {
-                    try {
-                        Thread.sleep(200);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
-                }
-
-                if (isCancelled.get()) break;
-
-                // 确定当前批次生成的文件类型
-                FillContentType currentType = config.getContentType();
-                if (currentType == FillContentType.MIXED) {
-                    int mod = fileIndex % 3;
-                    if (mod == 1) currentType = FillContentType.RAW_FILE;
-                    else if (mod == 2) currentType = FillContentType.IMAGE;
-                    else currentType = FillContentType.VIDEO;
-                }
-
-                File generatedFile = null;
+        while (!isCancelled.get() && bytesWrittenTotal.get() < targetTotalBytes) {
+            while (isPaused.get() && !isCancelled.get()) {
                 try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+
+            if (isCancelled.get() || bytesWrittenTotal.get() >= targetTotalBytes) {
+                break;
+            }
+
+            try {
+                if (config.isFragmentationMode() && (config.getContentType() == FillContentType.RAW_FILE || config.getContentType() == FillContentType.MIXED)) {
+                    // 碎片化海量小文件模式 (仅作用于数据文件，保证与多媒体及大分块互斥清晰)
+                    int fIndex = (int) globalFileIndex.incrementAndGet();
+                    currentFileName = String.format("frag_w%d_%06d.bin", workerId, fIndex);
+                    FragmentationGenerator.createFragmentFile(
+                            dir,
+                            fIndex,
+                            workerId,
+                            config.getFragmentSizeLevel(),
+                            config.isRandomData(),
+                            config.isPunchHolesEnabled(),
+                            callback
+                    );
+                    filesCreatedCount.incrementAndGet();
+                } else {
+                    // 常规顺序大块模式
+                    long remainingToFill = targetTotalBytes - bytesWrittenTotal.get();
+                    if (remainingToFill <= 0) break;
+
+                    int fIndex = (int) globalFileIndex.incrementAndGet();
+                    FillContentType currentType = config.getContentType();
+                    if (currentType == FillContentType.MIXED) {
+                        int mod = fIndex % 3;
+                        if (mod == 1) currentType = FillContentType.RAW_FILE;
+                        else if (mod == 2) currentType = FillContentType.IMAGE;
+                        else currentType = FillContentType.VIDEO;
+                    }
+
+                    File generatedFile = null;
                     switch (currentType) {
                         case RAW_FILE:
                             long chunkSize = Math.min(config.getChunkSizeBytes(), remainingToFill);
-                            currentFileName = String.format("filler_data_%04d.bin", fileIndex);
-                            generatedFile = FileGenerator.createDataFile(dir, chunkSize, config.isRandomData(), fileIndex, callback);
+                            currentFileName = String.format("filler_w%d_%04d.bin", workerId, fIndex);
+                            generatedFile = FileGenerator.createDataFile(dir, chunkSize, config.isRandomData(), fIndex, callback);
                             break;
 
                         case IMAGE:
-                            currentFileName = String.format("filler_img_%04d.jpg", fileIndex);
-                            generatedFile = ImageGenerator.createImageFile(dir, fileIndex, callback);
+                            currentFileName = String.format("filler_w%d_%04d.jpg", workerId, fIndex);
+                            generatedFile = ImageGenerator.createImageFile(dir, fIndex, callback);
                             if (config.isImportToMediaGallery()) {
                                 StorageHelper.registerImageToMediaStore(context, generatedFile);
                             }
                             break;
 
                         case VIDEO:
-                            currentFileName = String.format("filler_vid_%04d.mp4", fileIndex);
-                            // 默认生成适中短视频，上限单文件20MB或单块大小
+                            currentFileName = String.format("filler_w%d_%04d.mp4", workerId, fIndex);
                             long vidSize = Math.min(20L * 1024 * 1024, remainingToFill);
-                            generatedFile = VideoGenerator.createVideoFile(dir, fileIndex, vidSize, callback);
+                            generatedFile = VideoGenerator.createVideoFile(dir, fIndex, vidSize, callback);
                             if (config.isImportToMediaGallery()) {
                                 StorageHelper.registerVideoToMediaStore(context, generatedFile);
                             }
                             break;
                     }
-                } catch (IOException e) {
-                    // 捕获 ENOSPC "No space left on device" 或空间写满异常
-                    String msg = e.getMessage() != null ? e.getMessage() : "";
-                    if (msg.contains("ENOSPC") || msg.toLowerCase().contains("no space left") || currentStorage.getFreeBytes() < 1024 * 1024) {
-                        completionReason = "手机ROM已极限填满 (磁盘满)";
-                        break;
-                    } else {
-                        throw e; // 其他异常抛出处理
+
+                    if (generatedFile != null && generatedFile.exists()) {
+                        filesCreatedCount.incrementAndGet();
                     }
                 }
-
-                if (generatedFile != null && generatedFile.exists()) {
-                    filesCreatedCount++;
+            } catch (IOException e) {
+                String msg = e.getMessage() != null ? e.getMessage() : "";
+                if (msg.contains("ENOSPC") || msg.toLowerCase().contains("no space left")) {
+                    // 物理闪存彻底写满
+                    isCancelled.set(true);
+                    break;
                 }
-
-                fileIndex++;
-                // 每生成完一个文件，使用底层文件系统最新容量校准刷新
-                StorageInfo afterFileStorage = StorageHelper.getStorageInfo(context);
-                dispatchProgress(afterFileStorage);
             }
+        }
+    }
 
-            isRunning.set(false);
-            if (isCancelled.get()) {
-                currentStatus = TaskStatus.STOPPED;
-                notifyStatusChanged(TaskStatus.STOPPED, "任务已由用户手动停止");
-            } else {
-                currentStatus = TaskStatus.COMPLETED;
-                notifyStatusChanged(TaskStatus.COMPLETED, completionReason);
-            }
-        } catch (Exception e) {
-            isRunning.set(false);
-            currentStatus = TaskStatus.ERROR;
-            notifyStatusChanged(TaskStatus.ERROR, "填充出错: " + e.getMessage());
-        } finally {
-            dispatchProgress(StorageHelper.getStorageInfo(context));
+    private synchronized void recordBytesWritten(long deltaBytes, StorageInfo initialStorage) {
+        long currentTotal = bytesWrittenTotal.addAndGet(deltaBytes);
+        long now = SystemClock.elapsedRealtime();
+        long timeDiff = now - lastSpeedSampleTime;
+
+        if (timeDiff >= 400) {
+            long bytesDiff = currentTotal - lastSpeedSampleBytes;
+            currentSpeed = (bytesDiff * 1000.0) / (double) timeDiff;
+            lastSpeedSampleTime = now;
+            lastSpeedSampleBytes = currentTotal;
+
+            // 动态推算剩余可用空间并分发
+            long dynamicFree = Math.max(0, initialStorage.getFreeBytes() - currentTotal);
+            StorageInfo realTimeStorage = new StorageInfo(initialStorage.getTotalBytes(), dynamicFree);
+            dispatchProgress(realTimeStorage);
         }
     }
 
     private void dispatchProgress(StorageInfo latestStorage) {
         long elapsed = (SystemClock.elapsedRealtime() - startTimeMillis) / 1000;
         long eta = 0;
-        if (currentSpeed > 0 && targetTotalBytes > bytesWrittenTotal) {
-            eta = (long) ((targetTotalBytes - bytesWrittenTotal) / currentSpeed);
+        long written = bytesWrittenTotal.get();
+        if (currentSpeed > 0 && targetTotalBytes > written) {
+            eta = (long) ((targetTotalBytes - written) / currentSpeed);
         }
 
         FillProgress progress = new FillProgress(
                 currentStatus,
-                bytesWrittenTotal,
+                written,
                 targetTotalBytes,
                 currentSpeed,
                 elapsed,
                 eta,
-                filesCreatedCount,
+                filesCreatedCount.get(),
+                activeThreads,
                 currentFileName,
                 null
         );

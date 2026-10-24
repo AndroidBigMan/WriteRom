@@ -12,6 +12,7 @@ public class FillProgress {
     private final long elapsedTimeSec;
     private final long etaSec;
     private final int filesCreatedCount;
+    private final int activeThreads;
     private final String currentFileName;
     private final String errorMessage;
 
@@ -22,6 +23,7 @@ public class FillProgress {
                         long elapsedTimeSec,
                         long etaSec,
                         int filesCreatedCount,
+                        int activeThreads,
                         @Nullable String currentFileName,
                         @Nullable String errorMessage) {
         this.status = status != null ? status : TaskStatus.IDLE;
@@ -31,17 +33,34 @@ public class FillProgress {
         this.elapsedTimeSec = Math.max(0, elapsedTimeSec);
         this.etaSec = Math.max(0, etaSec);
         this.filesCreatedCount = Math.max(0, filesCreatedCount);
+        this.activeThreads = Math.max(1, activeThreads);
         this.currentFileName = currentFileName != null ? currentFileName : "";
         this.errorMessage = errorMessage != null ? errorMessage : "";
     }
 
+    public FillProgress(TaskStatus status,
+                        long bytesWrittenThisSession,
+                        long targetTotalBytes,
+                        double speedBytesPerSec,
+                        long elapsedTimeSec,
+                        long etaSec,
+                        int filesCreatedCount,
+                        @Nullable String currentFileName,
+                        @Nullable String errorMessage) {
+        this(status, bytesWrittenThisSession, targetTotalBytes, speedBytesPerSec, elapsedTimeSec, etaSec, filesCreatedCount, 1, currentFileName, errorMessage);
+    }
+
     public static FillProgress createIdle() {
-        return new FillProgress(TaskStatus.IDLE, 0, 0, 0, 0, 0, 0, "", "");
+        return new FillProgress(TaskStatus.IDLE, 0, 0, 0, 0, 0, 0, 1, "", "");
     }
 
     @NonNull
     public TaskStatus getStatus() {
         return status;
+    }
+
+    public int getActiveThreads() {
+        return activeThreads;
     }
 
     @NonNull
@@ -54,6 +73,7 @@ public class FillProgress {
                 this.elapsedTimeSec,
                 this.etaSec,
                 this.filesCreatedCount,
+                this.activeThreads,
                 this.currentFileName,
                 this.errorMessage
         );

@@ -54,16 +54,31 @@
 * **专属目录防污染**：默认所有生成数据存储在应用专属隔离目录中（`.nomedia` 隔离），**绝不污染用户的日常个人相册**。
 * **系统相册导入开关**：可手动勾选【导入系统相册】，开启后主动向 Android `MediaStore` 触发扫描与索引，用于专项压测相册缩略图生成器（MediaScanner）的系统负载。
 
-### 5. 前台服务常驻与平滑控制
+### 5. 高级压测与并发控制 (v1.2 新增)
+* **1~8 线程自由并发调度**：
+  * 支持 1、2、4、8 线程弹性伸缩，多线程协同共享剩余填充配额（`AtomicLong` 原子分发），充分榨干 UFS / eMMC 闪存主控的多通道并行读写吞吐能力。
+  * 实时状态栏与 UI 仪表盘实时呈现“X 线程并发”徽标，并以千位分隔符展示已创建文件总量。
+* **文件系统碎片化填充模式 (Mass Small Files)**：
+  * **极限 Inode 与元数据（Metadata）冲击**：摆脱单一的大文件顺序写入，支持连续写入成千上万个 4KB ~ 256KB 的零散碎片文件，用于模拟长周期碎片化、测试闪存磨损均衡（Wear-Leveling）与 Linux 内核 VFS 目录索引树性能。
+  * **分级目录散列管理（Directory Bucket Hashing）**：按每 500 个文件自动归档至独立散列子目录（`frag_bucket_000` ~ `frag_bucket_999`），杜绝单一目录超量节点导致 ext4/f2fs 线性遍历瘫痪或内核软死锁。
+  * **三档碎片规格可选**：
+    * `极小碎片 (4KB ~ 16KB)`：高密度元数据读写与极限碎片化；
+    * `常用碎片 (32KB ~ 128KB)`：日常应用缓存与微日志碎片分布模拟；
+    * `混合高熵 (4KB ~ 256KB)`：全跨度尺寸碎片交织填充。
+    * **规格互斥与双向联动设计**：分块大小（`256MB` / `500MB` / `1024MB`）与碎片化小文件规格在 UI 与引擎层完全互斥并双向实时联动（点击任一大分块自动退出碎片化，反之亦然），实时仪表盘与常驻通知栏明确标明“当前生效规格”，彻底消除配置歧义与优先级混乱。
+* **真实穿插打孔 (Write & Punch)**：
+    * 模拟长期使用下的物理不连续碎块，每累计生成 500 个微文件时，以 30% 概率随机穿插剔除部分微文件，在闪存物理块中制造非连续的空白空洞，强迫底层闪存主控在后续写入时频繁触发垃圾回收（GC）与坏块迁移。
+
+### 6. 前台服务常驻与平滑控制
 * 采用 `ForegroundService` 结合 `PARTIAL_WAKE_LOCK`，确保锁屏或切到后台时填充任务不被系统 Low Memory Killer 中断。
-* 常驻通知栏实时展示瞬时写入速率（MB/s）、已写入进度与预计剩余时间（ETA）。
+* 常驻通知栏实时展示瞬时写入速率（MB/s）、当前并发线程数、已写入进度与预计剩余时间（ETA）。
 * 支持 **【开始】**、**【暂停】**、**【恢复填充】**、**【终止任务】** 平滑控制。
 
-### 6. 一键极速清理与空间复原
+### 7. 一键极速清理与空间复原
 * 独立追踪所有生成的数据，提供 **【一键清理填充数据】** 功能。
-* 后台多线程异步彻底删除所有填充文件，并同步剔除 MediaStore 索引，瞬间恢复手机可用存储空间。
+* 后台多线程异步彻底递归删除所有大文件与散列碎片目录（`frag_bucket_*`），并同步剔除 MediaStore 索引，瞬间恢复手机可用存储空间。
 
-### 7. 专属定制微芯片图标
+### 8. 专属定制微芯片图标
 * 配备全套 Android Adaptive Icon 自适应矢量图标与全密度位图（`mipmap-xxxhdpi` 等），适配现代 Android 系统的圆角、方形、圆形及单色桌面规范。
 
 ---
@@ -89,8 +104,9 @@
 │              Java 业务逻辑与系统层                     │
 │   - MainActivity.java (宿主 Activity 与权限管理)       │
 │   - StorageFillerService.java (前台服务保活常驻)       │
-│   - FillEngine.java (填充调度核心引擎)                 │
+│   - FillEngine.java (多线程并发调度核心引擎)           │
 │   - FileGenerator.java (大块数据生成，零填/随机)       │
+│   - FragmentationGenerator.java (海量散列碎片小文件)   │
 │   - ImageGenerator.java (标准合法 JPG 图片生成)        │
 │   - VideoGenerator.java (合规标准 MP4 视频生成)        │
 │   - CleanupManager.java (一键释放与多媒体库清理)       │
@@ -104,12 +120,25 @@ WriteRom/
 ├── app/
 │   ├── src/main/
 │   │   ├── java/com/mobiiot/writerom/
-│   │   │   ├── engine/          # [Java] 核心任务调度与空间清理引擎
-│   │   │   ├── generator/       # [Java] 文件、JPG图片、MP4视频生成器
-│   │   │   ├── model/           # [Java] 存储状态、配置与进度数据模型
-│   │   │   ├── service/         # [Java] 前台保活与通知栏服务
+│   │   │   ├── engine/          # [Java] 核心多线程任务调度与空间清理引擎
+│   │   │   │   ├── FillEngine.java
+│   │   │   │   └── CleanupManager.java
+│   │   │   ├── generator/       # [Java] 文件、微小碎片、JPG图片、MP4视频生成器
+│   │   │   │   ├── FileGenerator.java
+│   │   │   │   ├── FragmentationGenerator.java
+│   │   │   │   ├── ImageGenerator.java
+│   │   │   │   └── VideoGenerator.java
+│   │   │   ├── model/           # [Java] 存储状态、压测配置与进度数据模型
+│   │   │   │   ├── FillConfig.java
+│   │   │   │   ├── FillProgress.java
+│   │   │   │   ├── FragmentSizeLevel.java
+│   │   │   │   └── ...
+│   │   │   ├── service/         # [Java] 前台保活与多线程状态通知服务
 │   │   │   ├── ui/              # [Kotlin] ComposeView 桥接与 Material3 页面
-│   │   │   │   ├── components/  # [Kotlin] 仪表盘、配置卡片、实时速率监控组件
+│   │   │   │   ├── components/  # [Kotlin] Bento仪表盘、高级压测卡片、阈值卡片等
+│   │   │   │   │   ├── AdvancedStressCard.kt  # v1.2 压测并发与碎片化设置
+│   │   │   │   │   ├── LiveDashboardCard.kt   # 实时并发度与速率状态监控
+│   │   │   │   │   └── ...
 │   │   │   │   └── theme/       # [Kotlin] 视觉色彩与主题
 │   │   │   ├── utils/           # [Java] StatFs 容量计算与多媒体扫描工具
 │   │   │   ├── MainActivity.java

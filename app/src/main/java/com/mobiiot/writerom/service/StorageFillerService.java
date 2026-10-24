@@ -78,7 +78,7 @@ public class StorageFillerService extends Service {
             wakeLock.acquire(4 * 3600 * 1000L /* 4 hours max */);
         }
 
-        Notification notification = buildNotification("正在准备填充...", 0, 0, "0 MB/s");
+        Notification notification = buildNotification("ROM 存储填充中", "正在准备填充...", 0, 0);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
         } else {
@@ -136,16 +136,20 @@ public class StorageFillerService extends Service {
     private void updateNotification(FillProgress progress) {
         int max = 100;
         int current = (int) progress.getProgressPercent();
-        String contentText = String.format("已写入: %s / %s | 速度: %s",
+        String contentText = String.format("已写入: %s / %s | %s",
                 progress.getFormattedWritten(),
                 progress.getFormattedTarget(),
                 progress.getFormattedSpeed());
 
-        Notification notification = buildNotification(contentText, max, current, progress.getFormattedSpeed());
+        String title = progress.getStatus() == TaskStatus.PAUSED
+                ? "ROM 存储填充 (已暂停)"
+                : String.format("ROM 填充中 (%d线程 · %s)", progress.getActiveThreads(), progress.getFormattedSpeed());
+
+        Notification notification = buildNotification(title, contentText, max, current);
         notificationManager.notify(NOTIFICATION_ID, notification);
     }
 
-    private Notification buildNotification(String content, int maxProgress, int currentProgress, String speed) {
+    private Notification buildNotification(String title, String content, int maxProgress, int currentProgress) {
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 this, 0, notificationIntent,
@@ -160,7 +164,7 @@ public class StorageFillerService extends Service {
         );
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("ROM 存储填充中 (" + speed + ")")
+                .setContentTitle(title)
                 .setContentText(content)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(pendingIntent)

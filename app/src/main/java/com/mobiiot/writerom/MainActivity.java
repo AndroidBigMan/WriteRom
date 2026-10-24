@@ -159,6 +159,11 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
                 fillConfig.isRandomData(),
                 (int) (fillConfig.getChunkSizeBytes() / (1024 * 1024)),
                 fillConfig.isImportToMediaGallery(),
+                fillConfig.getConcurrencyThreads(),
+                fillConfig.isFragmentationMode(),
+                fillConfig.getFragmentSizeLevel(),
+                fillConfig.isPunchHolesEnabled(),
+                currentProgress.getActiveThreads(),
                 estimatedFill,
                 formattedEst,
                 currentProgress.getStatus(),
@@ -244,6 +249,10 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
     @Override
     public void onContentTypeChange(@NonNull FillContentType type) {
         fillConfig.setContentType(type);
+        // 若切换为多媒体内容(JPG/MP4)，自动关闭碎片化模式，避免规格冲突
+        if (type != FillContentType.RAW_FILE && type != FillContentType.MIXED) {
+            fillConfig.setFragmentationMode(false);
+        }
         updateUiState();
     }
 
@@ -255,13 +264,43 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
 
     @Override
     public void onChunkSizeChange(int sizeMb) {
+        // 用户明确点击大分块大小，自动关闭碎片化模式，使该大分块配置立即且明确生效
         fillConfig.setChunkSizeBytes((long) sizeMb * 1024 * 1024);
+        fillConfig.setFragmentationMode(false);
         updateUiState();
     }
 
     @Override
     public void onMediaGalleryToggle(boolean enable) {
         fillConfig.setImportToMediaGallery(enable);
+        updateUiState();
+    }
+
+    @Override
+    public void onConcurrencyChange(int threads) {
+        fillConfig.setConcurrencyThreads(threads);
+        updateUiState();
+    }
+
+    @Override
+    public void onFragmentationToggle(boolean enabled) {
+        fillConfig.setFragmentationMode(enabled);
+        // 开启碎片化模式时，若当前为图片或视频，自动转为普通文件以适配微文件填充
+        if (enabled && fillConfig.getContentType() != FillContentType.RAW_FILE && fillConfig.getContentType() != FillContentType.MIXED) {
+            fillConfig.setContentType(FillContentType.RAW_FILE);
+        }
+        updateUiState();
+    }
+
+    @Override
+    public void onFragmentSizeLevelChange(com.mobiiot.writerom.model.FragmentSizeLevel level) {
+        fillConfig.setFragmentSizeLevel(level);
+        updateUiState();
+    }
+
+    @Override
+    public void onPunchHolesToggle(boolean enabled) {
+        fillConfig.setPunchHolesEnabled(enabled);
         updateUiState();
     }
 

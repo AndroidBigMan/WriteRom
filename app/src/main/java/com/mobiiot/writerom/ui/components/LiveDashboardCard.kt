@@ -74,17 +74,50 @@ fun LiveDashboardCard(
                         )
                     }
 
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = statusColor.copy(alpha = 0.15f)
-                    ) {
-                        Text(
-                            text = uiState.taskStatus.label,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = statusColor,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                            modifier = Modifier.padding(end = 6.dp)
+                        ) {
+                            Text(
+                                text = "${uiState.activeThreads} 线程并发",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (uiState.isFragmentationMode)
+                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
+                            else
+                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
+                            modifier = Modifier.padding(end = 6.dp)
+                        ) {
+                            Text(
+                                text = uiState.effectiveWriteSpec,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = if (uiState.isFragmentationMode) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = statusColor.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = uiState.taskStatus.label,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = statusColor,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
                     }
                 }
 
@@ -156,7 +189,8 @@ fun LiveDashboardCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     MetricBox("已写入数据", "${uiState.formattedWritten} / ${uiState.formattedTarget}")
-                    MetricBox("已生成文件数", "${uiState.filesCreatedCount} 个")
+                    val formattedCount = java.text.NumberFormat.getIntegerInstance().format(uiState.filesCreatedCount)
+                    MetricBox("已生成文件数", "$formattedCount 个")
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))

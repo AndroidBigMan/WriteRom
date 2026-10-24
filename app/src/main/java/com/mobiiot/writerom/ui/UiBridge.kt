@@ -21,6 +21,10 @@ object UiBridge {
         fun onRandomDataToggle(isRandom: Boolean)
         fun onChunkSizeChange(sizeMb: Int)
         fun onMediaGalleryToggle(enable: Boolean)
+        fun onConcurrencyChange(threads: Int)
+        fun onFragmentationToggle(enabled: Boolean)
+        fun onFragmentSizeLevelChange(level: com.mobiiot.writerom.model.FragmentSizeLevel)
+        fun onPunchHolesToggle(enabled: Boolean)
         fun onStartTask()
         fun onPauseTask()
         fun onResumeTask()
@@ -66,6 +70,10 @@ object UiBridge {
                         onRandomDataToggle = { cb.onRandomDataToggle(it) },
                         onChunkSizeChange = { cb.onChunkSizeChange(it) },
                         onMediaGalleryToggle = { cb.onMediaGalleryToggle(it) },
+                        onConcurrencyChange = { cb.onConcurrencyChange(it) },
+                        onFragmentationToggle = { cb.onFragmentationToggle(it) },
+                        onFragmentSizeLevelChange = { cb.onFragmentSizeLevelChange(it) },
+                        onPunchHolesToggle = { cb.onPunchHolesToggle(it) },
                         onStart = { cb.onStartTask() },
                         onPause = { cb.onPauseTask() },
                         onResume = { cb.onResumeTask() },

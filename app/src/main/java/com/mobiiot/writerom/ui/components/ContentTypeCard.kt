@@ -23,6 +23,7 @@ fun ContentTypeCard(
     onContentTypeChange: (FillContentType) -> Unit,
     onRandomDataToggle: (Boolean) -> Unit,
     onChunkSizeChange: (Int) -> Unit,
+    onFragmentationToggle: (Boolean) -> Unit,
     onMediaGalleryToggle: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -118,27 +119,85 @@ fun ContentTypeCard(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "单个分块文件大小",
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Row {
-                        listOf(256, 500, 1024).forEach { sizeMb ->
-                            FilterChip(
-                                selected = uiState.chunkSizeMb == sizeMb,
-                                onClick = { onChunkSizeChange(sizeMb) },
-                                label = { Text("${sizeMb}MB", fontSize = 12.sp) },
-                                enabled = !isRunning,
-                                modifier = Modifier.padding(horizontal = 3.dp)
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "文件规格与分块大小",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (uiState.isFragmentationMode)
+                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
+                            else
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                        ) {
+                            Text(
+                                text = if (uiState.isFragmentationMode) "碎片化模式生效中" else "${uiState.chunkSizeMb}MB 常规分块生效中",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = if (uiState.isFragmentationMode) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        // 碎片化模式选项 Chip
+                        val isFragSelected = uiState.isFragmentationMode
+                        FilterChip(
+                            selected = isFragSelected,
+                            onClick = { onFragmentationToggle(true) },
+                            label = {
+                                Text(
+                                    "碎片化",
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isFragSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            enabled = !isRunning,
+                            modifier = Modifier.weight(1.1f)
+                        )
+
+                        // 常规分块大小 Chips (256MB, 500MB, 1024MB)
+                        listOf(256, 500, 1024).forEach { sizeMb ->
+                            val isChunkSelected = !uiState.isFragmentationMode && uiState.chunkSizeMb == sizeMb
+                            FilterChip(
+                                selected = isChunkSelected,
+                                onClick = { onChunkSizeChange(sizeMb) },
+                                label = {
+                                    Text(
+                                        "${sizeMb}MB",
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isChunkSelected) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                },
+                                enabled = !isRunning,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = if (uiState.isFragmentationMode)
+                            "⚡ 当前生效：碎片化模式 (${uiState.fragmentSizeLevel.label})，生成散列微小文件。可在下方【高级压测】卡片调节等级与打孔。"
+                        else
+                            "⚡ 当前生效：常规连续大文件写入，单个文件大小上限 ${uiState.chunkSizeMb}MB。",
+                        fontSize = 11.sp,
+                        color = if (uiState.isFragmentationMode) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))

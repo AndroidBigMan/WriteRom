@@ -3,6 +3,7 @@ package com.mobiiot.writerom.ui
 import androidx.compose.runtime.Immutable
 import com.mobiiot.writerom.model.FillContentType
 import com.mobiiot.writerom.model.FillMode
+import com.mobiiot.writerom.model.FragmentSizeLevel
 import com.mobiiot.writerom.model.TaskStatus
 
 @Immutable
@@ -18,13 +19,20 @@ data class StorageUiState(
 
     // 填充配置
     val fillMode: FillMode = FillMode.TARGET_REMAINING_SPACE,
-    val targetRemainingBytes: Long = 0L, // 用户选定默认不保留
+    val targetRemainingBytes: Long = 0L,
     val targetPercentage: Int = 100,
     val targetSpecificSizeBytes: Long = 10L * 1024 * 1024 * 1024,
     val contentType: FillContentType = FillContentType.RAW_FILE,
     val isRandomData: Boolean = false,
     val chunkSizeMb: Int = 500,
     val importToMediaGallery: Boolean = false,
+
+    // 高级压测配置 (v1.2)
+    val concurrencyThreads: Int = 1,
+    val isFragmentationMode: Boolean = false,
+    val fragmentSizeLevel: FragmentSizeLevel = FragmentSizeLevel.TINY_4K_16K,
+    val isPunchHolesEnabled: Boolean = false,
+    val activeThreads: Int = 1,
 
     // 预估填充体积
     val estimatedFillBytes: Long = 0L,
@@ -50,4 +58,16 @@ data class StorageUiState(
     val hasNotificationPermission: Boolean = true,
     val isCleaning: Boolean = false,
     val existingFillerFilesCount: Int = 0
-)
+) {
+    val effectiveWriteSpec: String
+        get() = when {
+            contentType == FillContentType.IMAGE -> "合规 JPEG 图片"
+            contentType == FillContentType.VIDEO -> "标准 MP4 视频"
+            isFragmentationMode -> when (fragmentSizeLevel) {
+                FragmentSizeLevel.TINY_4K_16K -> "4K~16K 碎片"
+                FragmentSizeLevel.SMALL_32K_128K -> "32K~128K 碎片"
+                FragmentSizeLevel.MIXED_4K_256K -> "4K~256K 碎片"
+            }
+            else -> "${chunkSizeMb}MB 分块" + if (contentType == FillContentType.MIXED) " (混合)" else ""
+        }
+}

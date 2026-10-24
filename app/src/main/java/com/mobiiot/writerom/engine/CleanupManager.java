@@ -2,10 +2,8 @@ package com.mobiiot.writerom.engine;
 
 import android.content.Context;
 import android.media.MediaScannerConnection;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.MediaStore;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.mobiiot.writerom.utils.StorageHelper;
@@ -38,31 +36,11 @@ public class CleanupManager {
 
         executor.execute(() -> {
             File dir = StorageHelper.getDedicatedStorageDir(context);
-            File[] files = dir.listFiles();
-
-            int deletedCount = 0;
-            long bytesReclaimed = 0;
+            int[] stats = new int[]{0}; // deletedCount
+            long[] reclaimed = new long[]{0}; // bytesReclaimed
             List<String> deletedPaths = new ArrayList<>();
 
-            if (files != null) {
-                for (File file : files) {
-                    if (file.isFile() && (file.getName().startsWith("filler_") || file.getName().startsWith("temp_"))) {
-                        long len = file.length();
-                        String path = file.getAbsolutePath();
-                        if (file.delete()) {
-                            deletedCount++;
-                            bytesReclaimed += len;
-                            deletedPaths.add(path);
-
-                            final int currentCount = deletedCount;
-                            final long currentReclaimed = bytesReclaimed;
-                            if (callback != null && currentCount % 10 == 0) {
-                                mainHandler.post(() -> callback.onCleanupProgress(currentCount, currentReclaimed));
-                            }
-                        }
-                    }
-                }
-            }
+            deleteRecursive(dir, dir, stats, reclaimed, deletedPaths, callback);
 
             // 清理系统 MediaStore 中被删除文件的残留记录
             if (!deletedPaths.isEmpty()) {
@@ -77,21 +55,62 @@ public class CleanupManager {
                 }
             }
 
-            final int finalTotal = deletedCount;
-            final long finalBytes = bytesReclaimed;
+            final int finalTotal = stats[0];
+            final long finalBytes = reclaimed[0];
             if (callback != null) {
                 mainHandler.post(() -> callback.onCleanupCompleted(finalTotal, finalBytes));
             }
         });
     }
 
+    private void deleteRecursive(File root, File current, int[] stats, long[] reclaimed, List<String> deletedPaths, CleanupCallback callback) {
+        File[] files = current.listFiles();
+        if (files == null) return;
+
+        for (File f : files) {
+            if (f.isDirectory()) {
+                if (f.getName().startsWith("frag_bucket_") || f.getName().startsWith("temp_")) {
+                    deleteRecursive(root, f, stats, reclaimed, deletedPaths, callback);
+                    f.delete();
+                }
+            } else if (f.isFile()) {
+                String name = f.getName();
+                if (name.startsWith("filler_") || name.startsWith("temp_") || name.startsWith("frag_")) {
+                    long len = f.length();
+                    String path = f.getAbsolutePath();
+                    if (f.delete()) {
+                        stats[0]++;
+                        reclaimed[0] += len;
+                        if (name.endsWith(".jpg") || name.endsWith(".mp4")) {
+                            deletedPaths.add(path);
+                        }
+
+                        if (callback != null && stats[0] % 100 == 0) {
+                            final int cCount = stats[0];
+                            final long cBytes = reclaimed[0];
+                            mainHandler.post(() -> callback.onCleanupProgress(cCount, cBytes));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public int countExistingFillerFiles() {
         File dir = StorageHelper.getDedicatedStorageDir(context);
-        File[] files = dir.listFiles();
+        return countRecursive(dir);
+    }
+
+    private int countRecursive(File current) {
+        File[] files = current.listFiles();
+        if (files == null) return 0;
         int count = 0;
-        if (files != null) {
-            for (File file : files) {
-                if (file.isFile() && (file.getName().startsWith("filler_") || file.getName().startsWith("temp_"))) {
+        for (File f : files) {
+            if (f.isDirectory() && f.getName().startsWith("frag_bucket_")) {
+                count += countRecursive(f);
+            } else if (f.isFile()) {
+                String name = f.getName();
+                if (name.startsWith("filler_") || name.startsWith("temp_") || name.startsWith("frag_")) {
                     count++;
                 }
             }

@@ -34,6 +34,10 @@ fun StorageFillerScreen(
     onRandomDataToggle: (Boolean) -> Unit,
     onChunkSizeChange: (Int) -> Unit,
     onMediaGalleryToggle: (Boolean) -> Unit,
+    onConcurrencyChange: (Int) -> Unit,
+    onFragmentationToggle: (Boolean) -> Unit,
+    onFragmentSizeLevelChange: (com.mobiiot.writerom.model.FragmentSizeLevel) -> Unit,
+    onPunchHolesToggle: (Boolean) -> Unit,
     onStart: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
@@ -148,10 +152,20 @@ fun StorageFillerScreen(
                 onContentTypeChange = onContentTypeChange,
                 onRandomDataToggle = onRandomDataToggle,
                 onChunkSizeChange = onChunkSizeChange,
+                onFragmentationToggle = onFragmentationToggle,
                 onMediaGalleryToggle = onMediaGalleryToggle
             )
 
-            // 5. 操作控制卡片（开始、暂停、停止、一键清理）
+            // 5. 高级压测与并发设置卡片 (v1.2)
+            AdvancedStressCard(
+                uiState = uiState,
+                onConcurrencyChange = onConcurrencyChange,
+                onFragmentationToggle = onFragmentationToggle,
+                onFragmentSizeLevelChange = onFragmentSizeLevelChange,
+                onPunchHolesToggle = onPunchHolesToggle
+            )
+
+            // 6. 操作控制卡片（开始、暂停、停止、一键清理）
             ControlActionsCard(
                 uiState = uiState,
                 onStart = onStart,

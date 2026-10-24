@@ -11,6 +11,10 @@ public class FillConfig {
     private boolean isRandomData;
     private long chunkSizeBytes;
     private boolean importToMediaGallery;
+    private int concurrencyThreads;
+    private boolean isFragmentationMode;
+    private FragmentSizeLevel fragmentSizeLevel;
+    private boolean isPunchHolesEnabled;
 
     public FillConfig() {
         this.fillMode = FillMode.TARGET_REMAINING_SPACE;
@@ -21,6 +25,10 @@ public class FillConfig {
         this.isRandomData = false; // 默认零字节极速填充
         this.chunkSizeBytes = 500L * 1024 * 1024; // 默认单文件500MB
         this.importToMediaGallery = false; // 方案A默认不污染相册，提供开关
+        this.concurrencyThreads = 1; // 默认单线程
+        this.isFragmentationMode = false; // 默认顺序大块
+        this.fragmentSizeLevel = FragmentSizeLevel.TINY_4K_16K;
+        this.isPunchHolesEnabled = false;
     }
 
     public FillConfig(@NonNull FillConfig other) {
@@ -32,6 +40,43 @@ public class FillConfig {
         this.isRandomData = other.isRandomData;
         this.chunkSizeBytes = other.chunkSizeBytes;
         this.importToMediaGallery = other.importToMediaGallery;
+        this.concurrencyThreads = other.concurrencyThreads;
+        this.isFragmentationMode = other.isFragmentationMode;
+        this.fragmentSizeLevel = other.fragmentSizeLevel;
+        this.isPunchHolesEnabled = other.isPunchHolesEnabled;
+    }
+
+    public int getConcurrencyThreads() {
+        return concurrencyThreads;
+    }
+
+    public void setConcurrencyThreads(int concurrencyThreads) {
+        this.concurrencyThreads = Math.max(1, Math.min(8, concurrencyThreads));
+    }
+
+    public boolean isFragmentationMode() {
+        return isFragmentationMode;
+    }
+
+    public void setFragmentationMode(boolean fragmentationMode) {
+        isFragmentationMode = fragmentationMode;
+    }
+
+    @NonNull
+    public FragmentSizeLevel getFragmentSizeLevel() {
+        return fragmentSizeLevel != null ? fragmentSizeLevel : FragmentSizeLevel.TINY_4K_16K;
+    }
+
+    public void setFragmentSizeLevel(FragmentSizeLevel fragmentSizeLevel) {
+        this.fragmentSizeLevel = fragmentSizeLevel;
+    }
+
+    public boolean isPunchHolesEnabled() {
+        return isPunchHolesEnabled;
+    }
+
+    public void setPunchHolesEnabled(boolean punchHolesEnabled) {
+        isPunchHolesEnabled = punchHolesEnabled;
     }
 
     public FillMode getFillMode() {
@@ -88,6 +133,21 @@ public class FillConfig {
 
     public void setChunkSizeBytes(long chunkSizeBytes) {
         this.chunkSizeBytes = Math.max(1024 * 1024, chunkSizeBytes); // 最少1MB
+        this.isFragmentationMode = false; // 明确指定分块大小，自动关闭碎片化模式，保证规格一致性
+    }
+
+    @NonNull
+    public String getEffectiveWriteSpecLabel() {
+        if (contentType == FillContentType.IMAGE) {
+            return "合规 JPEG 图片";
+        } else if (contentType == FillContentType.VIDEO) {
+            return "标准 MP4 视频";
+        } else if (isFragmentationMode) {
+            return "碎片化小文件 (" + getFragmentSizeLevel().getLabel() + ")";
+        } else {
+            long mb = chunkSizeBytes / (1024 * 1024);
+            return mb + "MB 常规分块" + (contentType == FillContentType.MIXED ? " (混合)" : "");
+        }
     }
 
     public boolean isImportToMediaGallery() {
