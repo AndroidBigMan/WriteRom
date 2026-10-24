@@ -137,7 +137,13 @@ fun StorageFillerScreen(
             // 2. 实时写入监控卡片 (进行中/暂停/完成状态下展示)
             LiveDashboardCard(uiState = uiState)
 
-            // 3. 填充阈值与策略设置卡片
+            // 3. 实时写入性能衰减折线图卡片 (v1.3 新增)
+            PerformanceChartCard(uiState = uiState)
+
+            // 4. 闪存健康与芯片温控感知卡片 (v1.3 新增)
+            HardwareHealthCard(uiState = uiState)
+
+            // 5. 填充阈值与策略设置卡片
             ThresholdConfigCard(
                 uiState = uiState,
                 onModeChange = onModeChange,
@@ -146,7 +152,7 @@ fun StorageFillerScreen(
                 onSpecificSizeChange = onSpecificSizeChange
             )
 
-            // 4. 填充内容类型设置卡片
+            // 6. 填充内容类型设置卡片
             ContentTypeCard(
                 uiState = uiState,
                 onContentTypeChange = onContentTypeChange,
@@ -156,7 +162,7 @@ fun StorageFillerScreen(
                 onMediaGalleryToggle = onMediaGalleryToggle
             )
 
-            // 5. 高级压测与并发设置卡片 (v1.2)
+            // 7. 高级压测与并发设置卡片 (v1.2)
             AdvancedStressCard(
                 uiState = uiState,
                 onConcurrencyChange = onConcurrencyChange,
@@ -165,7 +171,7 @@ fun StorageFillerScreen(
                 onPunchHolesToggle = onPunchHolesToggle
             )
 
-            // 6. 操作控制卡片（开始、暂停、停止、一键清理）
+            // 8. 操作控制卡片（开始、暂停、停止、一键清理）
             ControlActionsCard(
                 uiState = uiState,
                 onStart = onStart,

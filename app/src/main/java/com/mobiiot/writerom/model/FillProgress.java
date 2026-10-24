@@ -16,6 +16,12 @@ public class FillProgress {
     private final String currentFileName;
     private final String errorMessage;
 
+    // v1.3: 性能历史与 SLC 缓存感知
+    private final float[] speedHistory;
+    private final float peakSpeedMb;
+    private final float avgSpeedMb;
+    private final boolean isSlcExhausted;
+
     public FillProgress(TaskStatus status,
                         long bytesWrittenThisSession,
                         long targetTotalBytes,
@@ -25,7 +31,11 @@ public class FillProgress {
                         int filesCreatedCount,
                         int activeThreads,
                         @Nullable String currentFileName,
-                        @Nullable String errorMessage) {
+                        @Nullable String errorMessage,
+                        @Nullable float[] speedHistory,
+                        float peakSpeedMb,
+                        float avgSpeedMb,
+                        boolean isSlcExhausted) {
         this.status = status != null ? status : TaskStatus.IDLE;
         this.bytesWrittenThisSession = Math.max(0, bytesWrittenThisSession);
         this.targetTotalBytes = Math.max(0, targetTotalBytes);
@@ -36,6 +46,23 @@ public class FillProgress {
         this.activeThreads = Math.max(1, activeThreads);
         this.currentFileName = currentFileName != null ? currentFileName : "";
         this.errorMessage = errorMessage != null ? errorMessage : "";
+        this.speedHistory = speedHistory != null ? speedHistory : new float[0];
+        this.peakSpeedMb = Math.max(0f, peakSpeedMb);
+        this.avgSpeedMb = Math.max(0f, avgSpeedMb);
+        this.isSlcExhausted = isSlcExhausted;
+    }
+
+    public FillProgress(TaskStatus status,
+                        long bytesWrittenThisSession,
+                        long targetTotalBytes,
+                        double speedBytesPerSec,
+                        long elapsedTimeSec,
+                        long etaSec,
+                        int filesCreatedCount,
+                        int activeThreads,
+                        @Nullable String currentFileName,
+                        @Nullable String errorMessage) {
+        this(status, bytesWrittenThisSession, targetTotalBytes, speedBytesPerSec, elapsedTimeSec, etaSec, filesCreatedCount, activeThreads, currentFileName, errorMessage, new float[0], 0f, 0f, false);
     }
 
     public FillProgress(TaskStatus status,
@@ -47,11 +74,11 @@ public class FillProgress {
                         int filesCreatedCount,
                         @Nullable String currentFileName,
                         @Nullable String errorMessage) {
-        this(status, bytesWrittenThisSession, targetTotalBytes, speedBytesPerSec, elapsedTimeSec, etaSec, filesCreatedCount, 1, currentFileName, errorMessage);
+        this(status, bytesWrittenThisSession, targetTotalBytes, speedBytesPerSec, elapsedTimeSec, etaSec, filesCreatedCount, 1, currentFileName, errorMessage, new float[0], 0f, 0f, false);
     }
 
     public static FillProgress createIdle() {
-        return new FillProgress(TaskStatus.IDLE, 0, 0, 0, 0, 0, 0, 1, "", "");
+        return new FillProgress(TaskStatus.IDLE, 0, 0, 0, 0, 0, 0, 1, "", "", new float[0], 0f, 0f, false);
     }
 
     @NonNull
@@ -75,7 +102,11 @@ public class FillProgress {
                 this.filesCreatedCount,
                 this.activeThreads,
                 this.currentFileName,
-                this.errorMessage
+                this.errorMessage,
+                this.speedHistory,
+                this.peakSpeedMb,
+                this.avgSpeedMb,
+                this.isSlcExhausted
         );
     }
 
@@ -111,6 +142,23 @@ public class FillProgress {
     @NonNull
     public String getErrorMessage() {
         return errorMessage;
+    }
+
+    @NonNull
+    public float[] getSpeedHistory() {
+        return speedHistory;
+    }
+
+    public float getPeakSpeedMb() {
+        return peakSpeedMb;
+    }
+
+    public float getAvgSpeedMb() {
+        return avgSpeedMb;
+    }
+
+    public boolean isSlcExhausted() {
+        return isSlcExhausted;
     }
 
     public float getProgressPercent() {

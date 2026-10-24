@@ -15,9 +15,11 @@ import com.mobiiot.writerom.model.FillContentType;
 import com.mobiiot.writerom.model.FillProgress;
 import com.mobiiot.writerom.model.StorageInfo;
 import com.mobiiot.writerom.model.TaskStatus;
+import com.mobiiot.writerom.utils.LifetimeStatsManager;
 import com.mobiiot.writerom.utils.StorageHelper;
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -55,6 +57,13 @@ public class FillEngine {
     private volatile long lastSpeedSampleBytes = 0;
     private volatile double currentSpeed = 0;
     private volatile String currentFileName = "";
+
+    // v1.3: 性能折线图数据采样与 SLC 缓存耗尽感知
+    private final LinkedList<Float> speedHistoryList = new LinkedList<>();
+    private volatile float peakSpeedMb = 0f;
+    private volatile boolean isSlcExhausted = false;
+    private volatile long lastHistorySampleTime = 0;
+    private volatile long lifetimeUnflushedBytes = 0;
 
     public FillEngine(@NonNull Context context) {
         this.context = context.getApplicationContext();
@@ -96,6 +105,13 @@ public class FillEngine {
         startTimeMillis = SystemClock.elapsedRealtime();
         lastSpeedSampleTime = startTimeMillis;
         lastSpeedSampleBytes = 0;
+        lastHistorySampleTime = startTimeMillis;
+        peakSpeedMb = 0f;
+        isSlcExhausted = false;
+        lifetimeUnflushedBytes = 0;
+        synchronized (speedHistoryList) {
+            speedHistoryList.clear();
+        }
 
         notifyStatusChanged(TaskStatus.RUNNING, "正在启动存储填充任务 (" + activeThreads + " 线程 · " + config.getEffectiveWriteSpecLabel() + ")...");
 
@@ -190,6 +206,10 @@ public class FillEngine {
             currentStatus = TaskStatus.ERROR;
             notifyStatusChanged(TaskStatus.ERROR, "填充出错: " + e.getMessage());
         } finally {
+            if (lifetimeUnflushedBytes > 0) {
+                LifetimeStatsManager.addBytesWritten(context, lifetimeUnflushedBytes);
+                lifetimeUnflushedBytes = 0;
+            }
             if (workerPool != null && !workerPool.isShutdown()) {
                 workerPool.shutdownNow();
             }
@@ -301,7 +321,15 @@ public class FillEngine {
 
     private synchronized void recordBytesWritten(long deltaBytes, StorageInfo initialStorage) {
         long currentTotal = bytesWrittenTotal.addAndGet(deltaBytes);
+        lifetimeUnflushedBytes += deltaBytes;
         long now = SystemClock.elapsedRealtime();
+
+        // 累计写入持久化统计（每累计满 10MB 写入一次 SharedPreferences，避免频繁磁盘 I/O）
+        if (lifetimeUnflushedBytes >= 10L * 1024 * 1024) {
+            LifetimeStatsManager.addBytesWritten(context, lifetimeUnflushedBytes);
+            lifetimeUnflushedBytes = 0;
+        }
+
         long timeDiff = now - lastSpeedSampleTime;
 
         if (timeDiff >= 400) {
@@ -309,6 +337,40 @@ public class FillEngine {
             currentSpeed = (bytesDiff * 1000.0) / (double) timeDiff;
             lastSpeedSampleTime = now;
             lastSpeedSampleBytes = currentTotal;
+
+            // 采样性能历史折线数据（约每 800ms 记录一个点，保留最近 40 个点）
+            if (now - lastHistorySampleTime >= 800) {
+                lastHistorySampleTime = now;
+                float currentSpeedMb = (float) (currentSpeed / (1024.0 * 1024.0));
+                synchronized (speedHistoryList) {
+                    if (speedHistoryList.size() >= 40) {
+                        speedHistoryList.removeFirst();
+                    }
+                    speedHistoryList.addLast(currentSpeedMb);
+                }
+
+                if (currentSpeedMb > peakSpeedMb) {
+                    peakSpeedMb = currentSpeedMb;
+                }
+
+                // SLC Cache 耗尽检测：累计写入已超过 2GB，且历史样本 >= 6，且初始峰值 >= 60MB/s
+                // 最近连续 3 个样本平均值相比峰值跌幅超过 50%
+                if (currentTotal > 2L * 1024 * 1024 * 1024 && peakSpeedMb >= 60f) {
+                    synchronized (speedHistoryList) {
+                        if (speedHistoryList.size() >= 6) {
+                            int count = Math.min(3, speedHistoryList.size());
+                            float recentSum = 0;
+                            for (int i = speedHistoryList.size() - count; i < speedHistoryList.size(); i++) {
+                                recentSum += speedHistoryList.get(i);
+                            }
+                            float recentAvg = recentSum / count;
+                            if (recentAvg < peakSpeedMb * 0.50f) {
+                                isSlcExhausted = true;
+                            }
+                        }
+                    }
+                }
+            }
 
             // 动态推算剩余可用空间并分发
             long dynamicFree = Math.max(0, initialStorage.getFreeBytes() - currentTotal);
@@ -325,6 +387,15 @@ public class FillEngine {
             eta = (long) ((targetTotalBytes - written) / currentSpeed);
         }
 
+        float[] history;
+        synchronized (speedHistoryList) {
+            history = new float[speedHistoryList.size()];
+            for (int i = 0; i < speedHistoryList.size(); i++) {
+                history[i] = speedHistoryList.get(i);
+            }
+        }
+        float avgSpeedMb = elapsed > 0 ? (float) (written / (1024.0 * 1024.0) / elapsed) : (float) (currentSpeed / (1024.0 * 1024.0));
+
         FillProgress progress = new FillProgress(
                 currentStatus,
                 written,
@@ -335,7 +406,11 @@ public class FillEngine {
                 filesCreatedCount.get(),
                 activeThreads,
                 currentFileName,
-                null
+                null,
+                history,
+                peakSpeedMb,
+                avgSpeedMb,
+                isSlcExhausted
         );
 
         if (listener != null) {

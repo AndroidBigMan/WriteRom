@@ -7,7 +7,7 @@ import com.mobiiot.writerom.model.FragmentSizeLevel
 import com.mobiiot.writerom.model.TaskStatus
 
 @Immutable
-data class StorageUiState(
+data class StorageUiState @JvmOverloads constructor(
     // 存储感知
     val totalBytes: Long = 0L,
     val freeBytes: Long = 0L,
@@ -57,7 +57,21 @@ data class StorageUiState(
     val hasStoragePermission: Boolean = true,
     val hasNotificationPermission: Boolean = true,
     val isCleaning: Boolean = false,
-    val existingFillerFilesCount: Int = 0
+    val existingFillerFilesCount: Int = 0,
+
+    // v1.3: 性能衰减折线图 (Canvas) 与 SLC 缓存感知
+    val speedHistory: List<Float> = emptyList(),
+    val peakSpeedMb: Float = 0f,
+    val avgSpeedMb: Float = 0f,
+    val isSlcExhausted: Boolean = false,
+
+    // v1.3: 硬件温度与寿命感知
+    val deviceTemperature: Float = 0f,
+    val thermalStatusLevel: Int = 0,
+    val thermalStatusLabel: String = "正常",
+    val lifetimeBytesWritten: Long = 0L,
+    val formattedLifetimeBytes: String = "0 B",
+    val estimatedPeCycles: Double = 0.0
 ) {
     val effectiveWriteSpec: String
         get() = when {

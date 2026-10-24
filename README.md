@@ -69,16 +69,31 @@
 * **真实穿插打孔 (Write & Punch)**：
     * 模拟长期使用下的物理不连续碎块，每累计生成 500 个微文件时，以 30% 概率随机穿插剔除部分微文件，在闪存物理块中制造非连续的空白空洞，强迫底层闪存主控在后续写入时频繁触发垃圾回收（GC）与坏块迁移。
 
-### 6. 前台服务常驻与平滑控制
+### 6. 实时性能衰减折线图与 SLC Cache 耗尽感知 (v1.3 新增)
+* **Compose Canvas 平滑贝塞尔曲线渲染**：
+  * 基于 `Canvas` API 与平滑贝塞尔算法，以秒级时间窗口（40秒滑动窗口）实时绘制写入吞吐性能演进趋势，杜绝生硬折线与锯齿。
+  * 曲线下方采用主色垂直渐变微光填充，配合参考虚线网格、全程均速参考线与峰值速率指示。
+* **SLC Cache 耗尽特征自动识别**：
+  * 针对现代 UFS / eMMC 固态闪存的 SLC 模拟缓存特性，实时监测速率骤降（从峰值断崖式下跌至 40%~50% 以下），自动标注 **“⚡ SLC Cache 已耗尽”**，直观展现从高速缓存写入向 TLC/QLC 物理颗粒原生直写与后台搬迁（Folding/GC）的过渡状态。
+
+### 7. UFS/eMMC 闪存寿命与芯片温度感知 (v1.3 新增)
+* **设备核心温度实时感知**：
+  * 基于电池与硬件传感器高频采样设备芯片温度（精度 0.1°C），划分四档温控安全等级（正常冷感 / 轻度温升 / 偏热负载 / 严重过热）。
+* **系统热节流 (Thermal Throttling) 状态监测**：
+  * 深度接入 Android 10+ (API 29) 官方 `PowerManager.OnThermalStatusChangedListener`，实时感知系统底层是否已对 CPU/闪存主控实施降频降温保护。
+* **闪存损耗与 TBW 寿命统计**：
+  * 持久化统计 WriteRom 累计总写入数据量（TBW），并根据设备 ROM 物理容量动态换算当前已消耗的相当完整 P/E 擦写循环次数，直观评估对闪存颗粒的老化影响。
+
+### 8. 前台服务常驻与平滑控制
 * 采用 `ForegroundService` 结合 `PARTIAL_WAKE_LOCK`，确保锁屏或切到后台时填充任务不被系统 Low Memory Killer 中断。
-* 常驻通知栏实时展示瞬时写入速率（MB/s）、当前并发线程数、已写入进度与预计剩余时间（ETA）。
+* 常驻通知栏实时展示瞬时写入速率（MB/s）、当前并发线程数、SLC 耗尽状态、已写入进度与预计剩余时间（ETA）。
 * 支持 **【开始】**、**【暂停】**、**【恢复填充】**、**【终止任务】** 平滑控制。
 
-### 7. 一键极速清理与空间复原
+### 9. 一键极速清理与空间复原
 * 独立追踪所有生成的数据，提供 **【一键清理填充数据】** 功能。
 * 后台多线程异步彻底递归删除所有大文件与散列碎片目录（`frag_bucket_*`），并同步剔除 MediaStore 索引，瞬间恢复手机可用存储空间。
 
-### 8. 专属定制微芯片图标
+### 10. 专属定制微芯片图标
 * 配备全套 Android Adaptive Icon 自适应矢量图标与全密度位图（`mipmap-xxxhdpi` 等），适配现代 Android 系统的圆角、方形、圆形及单色桌面规范。
 
 ---
@@ -110,6 +125,8 @@
 │   - ImageGenerator.java (标准合法 JPG 图片生成)        │
 │   - VideoGenerator.java (合规标准 MP4 视频生成)        │
 │   - CleanupManager.java (一键释放与多媒体库清理)       │
+│   - HardwareMonitor.java (芯片温度与系统热节流监测)    │
+│   - LifetimeStatsManager.java (TBW 与 P/E 寿命统计)    │
 │   - StorageHelper.java (StatFs 容量感知与格式化)       │
 └────────────────────────────────────────────────────────┘
 ```
@@ -135,12 +152,17 @@ WriteRom/
 │   │   │   │   └── ...
 │   │   │   ├── service/         # [Java] 前台保活与多线程状态通知服务
 │   │   │   ├── ui/              # [Kotlin] ComposeView 桥接与 Material3 页面
-│   │   │   │   ├── components/  # [Kotlin] Bento仪表盘、高级压测卡片、阈值卡片等
-│   │   │   │   │   ├── AdvancedStressCard.kt  # v1.2 压测并发与碎片化设置
-│   │   │   │   │   ├── LiveDashboardCard.kt   # 实时并发度与速率状态监控
+│   │   │   │   ├── components/  # [Kotlin] Bento仪表盘、高级压测卡片、折线图等
+│   │   │   │   │   ├── PerformanceChartCard.kt # v1.3 Canvas 实时性能折线图与 SLC 耗尽
+│   │   │   │   │   ├── HardwareHealthCard.kt   # v1.3 闪存寿命与芯片温度感知
+│   │   │   │   │   ├── AdvancedStressCard.kt   # v1.2 压测并发与碎片化设置
+│   │   │   │   │   ├── LiveDashboardCard.kt    # 实时并发度与速率状态监控
 │   │   │   │   │   └── ...
 │   │   │   │   └── theme/       # [Kotlin] 视觉色彩与主题
-│   │   │   ├── utils/           # [Java] StatFs 容量计算与多媒体扫描工具
+│   │   │   ├── utils/           # [Java] 硬件监测、TBW寿命、StatFs 容量工具
+│   │   │   │   ├── HardwareMonitor.java
+│   │   │   │   ├── LifetimeStatsManager.java
+│   │   │   │   └── StorageHelper.java
 │   │   │   ├── MainActivity.java
 │   │   │   └── WriteRomApplication.java
 │   │   ├── res/                 # 布局、微芯片自适应矢量图标与界面资源

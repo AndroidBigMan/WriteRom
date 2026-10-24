@@ -143,7 +143,10 @@ public class StorageFillerService extends Service {
 
         String title = progress.getStatus() == TaskStatus.PAUSED
                 ? "ROM 存储填充 (已暂停)"
-                : String.format("ROM 填充中 (%d线程 · %s)", progress.getActiveThreads(), progress.getFormattedSpeed());
+                : String.format("ROM 填充中 (%d线程%s · %s)",
+                    progress.getActiveThreads(),
+                    progress.isSlcExhausted() ? " · SLC耗尽" : "",
+                    progress.getFormattedSpeed());
 
         Notification notification = buildNotification(title, contentText, max, current);
         notificationManager.notify(NOTIFICATION_ID, notification);

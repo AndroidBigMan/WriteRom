@@ -30,7 +30,12 @@ import com.mobiiot.writerom.model.TaskStatus;
 import com.mobiiot.writerom.service.StorageFillerService;
 import com.mobiiot.writerom.ui.StorageUiState;
 import com.mobiiot.writerom.ui.UiBridge;
+import com.mobiiot.writerom.utils.HardwareMonitor;
+import com.mobiiot.writerom.utils.LifetimeStatsManager;
 import com.mobiiot.writerom.utils.StorageHelper;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends ComponentActivity implements UiBridge.UiCallbacks {
 
@@ -47,6 +52,7 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
     private StorageInfo currentStorage;
     private FillProgress currentProgress;
     private CleanupManager cleanupManager;
+    private HardwareMonitor hardwareMonitor;
 
     private boolean isCleaning = false;
     private int existingFilesCount = 0;
@@ -81,16 +87,21 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
         currentProgress = FillProgress.createIdle();
         cleanupManager = new CleanupManager(this);
 
-        // 2. 初始化 Kotlin ComposeView 桥接
+        // 2. 初始化 Kotlin ComposeView 桥接 (优先于硬件监听初始化，防止监听回调触发 NPE)
         bridgeController = new UiBridge.BridgeController(this);
         UiBridge.bindComposeView(composeView, bridgeController);
 
-        // 3. 启动并绑定前台服务
+        // 3. 初始化硬件监控并注册监听
+        hardwareMonitor = new HardwareMonitor(this);
+        hardwareMonitor.setListener((tempCelsius, thermalLevel, thermalStatusLabel) -> updateUiState());
+        hardwareMonitor.startMonitoring();
+
+        // 4. 启动并绑定前台服务
         Intent serviceIntent = new Intent(this, StorageFillerService.class);
         startService(serviceIntent);
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
-        // 4. 权限与状态检查
+        // 5. 权限与状态检查
         checkPermissions();
         refreshStorageAndFileCount();
     }
@@ -104,6 +115,9 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (hardwareMonitor != null) {
+            hardwareMonitor.stopMonitoring();
+        }
         if (isServiceBound) {
             unbindService(serviceConnection);
             isServiceBound = false;
@@ -118,7 +132,9 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
                         engine.getCurrentStatus(),
                         0,
                         fillConfig.calculateTargetFillBytes(currentStorage),
-                        0, 0, 0, 0, "", null
+                        0, 0, 0, 0,
+                        fillConfig.getConcurrencyThreads(),
+                        "", null
                 );
             }
         }
@@ -142,6 +158,21 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
 
         long estimatedFill = fillConfig.calculateTargetFillBytes(currentStorage);
         String formattedEst = StorageHelper.formatSize(estimatedFill);
+
+        List<Float> speedHistoryList = new ArrayList<>();
+        if (currentProgress.getSpeedHistory() != null) {
+            for (float s : currentProgress.getSpeedHistory()) {
+                speedHistoryList.add(s);
+            }
+        }
+
+        long lifetimeBytes = LifetimeStatsManager.getLifetimeBytesWritten(this) + currentProgress.getBytesWrittenThisSession();
+        String formattedLifetime = LifetimeStatsManager.formatBytes(lifetimeBytes);
+        double estimatedPe = LifetimeStatsManager.estimatePeCycles(lifetimeBytes, currentStorage.getTotalBytes());
+
+        float temp = hardwareMonitor != null ? hardwareMonitor.getCurrentTempCelsius() : 0f;
+        int thermalLevel = hardwareMonitor != null ? hardwareMonitor.getCurrentThermalLevel() : 0;
+        String thermalLabel = hardwareMonitor != null ? hardwareMonitor.getCurrentThermalLabel() : "正常";
 
         StorageUiState uiState = new StorageUiState(
                 currentStorage.getTotalBytes(),
@@ -182,10 +213,22 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
                 hasStoragePermission,
                 hasNotifPermission,
                 isCleaning,
-                existingFilesCount
+                existingFilesCount,
+                speedHistoryList,
+                currentProgress.getPeakSpeedMb(),
+                currentProgress.getAvgSpeedMb(),
+                currentProgress.isSlcExhausted(),
+                temp,
+                thermalLevel,
+                thermalLabel,
+                lifetimeBytes,
+                formattedLifetime,
+                estimatedPe
         );
 
-        bridgeController.updateState(uiState);
+        if (bridgeController != null) {
+            bridgeController.updateState(uiState);
+        }
     }
 
     private boolean checkHasStoragePermission() {
