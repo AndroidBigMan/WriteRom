@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer Circular Storage Gauge Background Arc (Radius 36, Center 54,54) -->
+    <path
+        android:strokeColor="#33475569"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M30,78 A34,34 0 1,1 78,78" />
+
+    <!-- Outer Circular Storage Gauge Progress Arc (Neon Gradient) -->
+    <path
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:pathData="M30,78 A34,34 0 1,1 74,38">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="30"
+                android:startY="78"
+                android:endX="74"
+                android:endY="38"
+                android:type="linear">
+                <item android:color="#FF3B82F6" android:offset="0.0" />
+                <item android:color="#FF06B6D4" android:offset="0.5" />
+                <item android:color="#FF10B981" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Metallic Hardware Chip Contact Pins -->
+    <!-- Top Pins -->
+    <path android:fillColor="#FF64748B" android:pathData="M37,25h4v4h-4z M45,25h4v4h-4z M52,24h4v5h-4z M59,25h4v4h-4z M67,25h4v4h-4z" />
+    <!-- Bottom Pins -->
+    <path android:fillColor="#FF64748B" android:pathData="M37,79h4v4h-4z M45,79h4v4h-4z M52,79h4v5h-4z M59,79h4v4h-4z M67,79h4v4h-4z" />
+    <!-- Left Pins -->
+    <path android:fillColor="#FF64748B" android:pathData="M25,37h4v4h-4z M25,45h4v4h-4z M24,52h5v4h-5z M25,59h4v4h-4z M25,67h4v4h-4z" />
+    <!-- Right Pins -->
+    <path android:fillColor="#FF64748B" android:pathData="M79,37h4v4h-4z M79,45h4v4h-4z M79,52h5v4h-5z M79,59h4v4h-4z M79,67h4v4h-4z" />
+
+    <!-- Center Pins Highlights -->
+    <path android:fillColor="#FF06B6D4" android:pathData="M52,24h4v5h-4z M24,52h5v4h-5z M79,52h5v4h-5z" />
+    <path android:fillColor="#FF10B981" android:pathData="M52,79h4v5h-4z" />
+
+    <!-- Hardware ROM Microchip Body (31..77, 31..77 -> 46x46, Center 54,54) -->
+    <path
+        android:pathData="M40,29h28a9,9 0 0,1 9,9v28a9,9 0 0,1 -9,9h-28a9,9 0 0,1 -9,-9v-28a9,9 0 0,1 9,-9z"
+        android:strokeColor="#FF38BDF8"
+        android:strokeWidth="1.8">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="31"
+                android:startY="31"
+                android:endX="77"
+                android:endY="77"
+                android:type="linear">
+                <item android:color="#FF1E293B" android:offset="0.0" />
+                <item android:color="#FF0F172A" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Chip Core Recess Area -->
+    <path
+        android:fillColor="#FF090E17"
+        android:strokeColor="#FF1E293B"
+        android:strokeWidth="1"
+        android:pathData="M42,34h24a6,6 0 0,1 6,6v24a6,6 0 0,1 -6,6h-24a6,6 0 0,1 -6,-6v-24a6,6 0 0,1 6,-6z" />
+
+    <!-- High-Speed Data Write Dynamic Arrow (Chevron) -->
+    <path
+        android:strokeColor="#803B82F6"
+        android:strokeWidth="2.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M45,39 L54,46 L63,39" />
+    <path
+        android:strokeColor="#FF06B6D4"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M44,45 L54,53 L64,45" />
+
+    <!-- ROM Flash Memory Stack / Blocks Icon -->
+    <path
+        android:strokeColor="#FF10B981"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round"
+        android:pathData="M42,59 L66,59" />
+    <path
+        android:strokeColor="#A010B981"
+        android:strokeWidth="2.6"
+        android:strokeLineCap="round"
+        android:pathData="M43,64 L65,64" />
+    <path
+        android:strokeColor="#6064748B"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M45,68 L63,68" />
+
+</vector>

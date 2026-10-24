@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">ROM填充助手</string>
+    <string name="channel_name">ROM填充后台服务</string>
+    <string name="channel_desc">用于保持ROM填充任务在后台持续稳定运行</string>
+</resources>
