@@ -88,7 +88,9 @@ public class StorageFillerService extends Service {
         fillEngine.setListener(new FillEngine.OnProgressListener() {
             @Override
             public void onProgressUpdate(@NonNull FillProgress progress, @NonNull StorageInfo storageInfo) {
-                updateNotification(progress);
+                if (fillEngine.isRunning() && (progress.getStatus() == TaskStatus.RUNNING || progress.getStatus() == TaskStatus.PAUSED)) {
+                    updateNotification(progress);
+                }
                 if (externalListener != null) {
                     externalListener.onProgressUpdate(progress, storageInfo);
                 }
@@ -97,8 +99,7 @@ public class StorageFillerService extends Service {
             @Override
             public void onStatusChanged(@NonNull TaskStatus status, @Nullable String message) {
                 if (status == TaskStatus.COMPLETED || status == TaskStatus.STOPPED || status == TaskStatus.ERROR) {
-                    releaseWakeLock();
-                    stopForeground(false);
+                    stopForegroundNotification();
                 }
                 if (externalListener != null) {
                     externalListener.onStatusChanged(status, message);
@@ -125,7 +126,7 @@ public class StorageFillerService extends Service {
         if (fillEngine != null) {
             fillEngine.stop();
         }
-        releaseWakeLock();
+        stopForegroundNotification();
     }
 
     @NonNull
@@ -133,7 +134,27 @@ public class StorageFillerService extends Service {
         return fillEngine;
     }
 
+    private synchronized void stopForegroundNotification() {
+        releaseWakeLock();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE);
+        } else {
+            stopForeground(true);
+        }
+        if (notificationManager != null) {
+            notificationManager.cancel(NOTIFICATION_ID);
+        }
+    }
+
     private void updateNotification(FillProgress progress) {
+        if (fillEngine == null || !fillEngine.isRunning()) {
+            return;
+        }
+        TaskStatus status = progress.getStatus();
+        if (status != TaskStatus.RUNNING && status != TaskStatus.PAUSED) {
+            return;
+        }
+
         int max = 100;
         int current = (int) progress.getProgressPercent();
         String contentText = String.format("已写入: %s / %s | %s",
@@ -141,7 +162,7 @@ public class StorageFillerService extends Service {
                 progress.getFormattedTarget(),
                 progress.getFormattedSpeed());
 
-        String title = progress.getStatus() == TaskStatus.PAUSED
+        String title = status == TaskStatus.PAUSED
                 ? "ROM 存储填充 (已暂停)"
                 : String.format("ROM 填充中 (%d线程%s · %s)",
                     progress.getActiveThreads(),
@@ -149,7 +170,9 @@ public class StorageFillerService extends Service {
                     progress.getFormattedSpeed());
 
         Notification notification = buildNotification(title, contentText, max, current);
-        notificationManager.notify(NOTIFICATION_ID, notification);
+        if (notificationManager != null) {
+            notificationManager.notify(NOTIFICATION_ID, notification);
+        }
     }
 
     private Notification buildNotification(String title, String content, int maxProgress, int currentProgress) {
@@ -207,9 +230,18 @@ public class StorageFillerService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        releaseWakeLock();
+        stopForegroundNotification();
         if (fillEngine != null) {
             fillEngine.stop();
+        }
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        if (fillEngine != null && !fillEngine.isRunning()) {
+            stopForegroundNotification();
+            stopSelf();
         }
     }
 }
