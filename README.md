@@ -105,6 +105,21 @@
 ### 11. 专属定制微芯片图标
 * 配备全套 Android Adaptive Icon 自适应矢量图标与全密度位图（`mipmap-xxxhdpi` 等），适配现代 Android 系统的圆角、方形、圆形及单色桌面规范。
 
+### 12. 现代化 Glassmorphic Bento 工业级视觉与响应式自适应系统 (v1.5 新增)
+* **常驻底部半透明悬浮控制岛 (Sticky Bottom Action Bar)**：
+  * 采用磨砂半透明高斯模糊面板，脱离传统长列表底部遮挡，实时感知并响应当前任务状态（空闲、写入、暂停、清理）；
+  * 清理进行中实时滚动显示释放进度条，写入中显示瞬时速率、进度与快捷控制按钮。
+* **物理弹簧微动效与触感震动反馈 (Spring Physics & Haptics)**：
+  * 全局核心按钮与分段控制搭载 `Modifier.bounceClickable()` 物理弹簧阻尼微动效（`scale = 0.95f`），点击同步触发轻度触感振动，告别生硬死板的默认涟漪。
+* **Neon 动态多段渐变闪存刻度规 (Neon Gradient Storage Gauge)**：
+  * 依据闪存占用比例动态切换多段霓虹渐变（健康绿-青蓝、温升橙黄、满载深红玫瑰），并附带玻璃顶部微光折射高光层与 Bento 状态胶囊。
+* **Glassmorphism 2.0 光感微描边与 Bento Grid 视觉层级**：
+  * 全卡片采用 1dp 垂直微光渐变描边（`Modifier.glassBorder`），Dark Slate（`#0B0F17` / `#161B26`）深色基底，消灭单调扁平灰卡。
+* **手机单栏智能上下文折叠 (Runtime Context Folding)**：
+  * 任务执行期间自动将低频配置参数（阈值、介质类型、高级压测）平滑折叠，聚合焦点于实时速率曲线、监控与硬件感知看板，并支持一键顺滑展开。
+* **手机与平板双模响应式自适应布局 (Adaptive `screenWidthDp >= 600dp`)**：
+  * 平板、折叠屏展开态或横屏模式下自动切换为对称双栏 Bento 布局，左栏遥测、右栏参数，空间利用充分优雅。
+
 ---
 
 ## 🏗️ 架构设计
@@ -162,6 +177,8 @@ WriteRom/
 │   │   │   ├── service/         # [Java] 前台保活与多线程状态通知服务
 │   │   │   ├── ui/              # [Kotlin] ComposeView 桥接与 Material3 页面
 │   │   │   │   ├── components/  # [Kotlin] Bento仪表盘、高级压测卡片、折线图等
+│   │   │   │   │   ├── StickyBottomActionBar.kt # v1.5 常驻底部半透明悬浮控制岛
+│   │   │   │   │   ├── StorageOverviewCard.kt   # v1.5 Neon 动态多段渐变闪存刻度规
 │   │   │   │   │   ├── FloatingHudCard.kt      # v1.4 全局悬浮窗开关与配置卡片
 │   │   │   │   │   ├── PerformanceChartCard.kt # v1.3 Canvas 实时性能折线图与 SLC 耗尽
 │   │   │   │   │   ├── HardwareHealthCard.kt   # v1.3 闪存寿命与芯片温度感知
@@ -172,7 +189,10 @@ WriteRom/
 │   │   │   │   │   ├── FloatingHudManager.kt        # WindowManager 挂载、磁吸贴边与状态分发
 │   │   │   │   │   ├── FloatingHudComponent.kt      # 胶囊/展开双形态 Compose UI
 │   │   │   │   │   └── FloatingHudLifecycleOwner.kt # 独立 Window 宿主生命周期持有者
-│   │   │   │   └── theme/       # [Kotlin] 视觉色彩与主题
+│   │   │   │   └── theme/       # [Kotlin] 视觉色彩、主题与微交互
+│   │   │   │       ├── Color.kt
+│   │   │   │       ├── Theme.kt
+│   │   │   │       └── InteractionExtensions.kt # v1.5 物理弹簧阻尼与环境光描边 Modifier
 │   │   │   ├── utils/           # [Java] 硬件监测、TBW寿命、StatFs 容量工具
 │   │   │   │   ├── HardwareMonitor.java
 │   │   │   │   ├── LifetimeStatsManager.java

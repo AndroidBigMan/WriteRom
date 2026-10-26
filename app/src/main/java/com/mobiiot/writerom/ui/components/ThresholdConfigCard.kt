@@ -1,7 +1,6 @@
 package com.mobiiot.writerom.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,6 +17,8 @@ import androidx.compose.ui.unit.sp
 import com.mobiiot.writerom.model.FillMode
 import com.mobiiot.writerom.model.TaskStatus
 import com.mobiiot.writerom.ui.StorageUiState
+import com.mobiiot.writerom.ui.theme.bounceClickable
+import com.mobiiot.writerom.ui.theme.glassBorder
 import com.mobiiot.writerom.utils.StorageHelper
 
 @Composable
@@ -32,7 +33,9 @@ fun ThresholdConfigCard(
     val isRunning = uiState.taskStatus == TaskStatus.RUNNING || uiState.taskStatus == TaskStatus.PAUSED
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .glassBorder(20.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -46,29 +49,45 @@ fun ThresholdConfigCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Threshold",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Threshold",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
                 Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = "填充阈值与策略设置",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Column {
+                    Text(
+                        text = "填充阈值与策略设置",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "配置预留阈值、百分比或指定大小",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 模式选择分段组件
+            // 模式选择分段组件 (带微光与按压微动效)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+                    .glassBorder(12.dp)
                     .padding(4.dp)
             ) {
                 FillMode.values().forEach { mode ->
@@ -81,8 +100,8 @@ fun ThresholdConfigCard(
                             .background(
                                 if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
                             )
-                            .clickable(enabled = !isRunning) { onModeChange(mode) }
-                            .padding(vertical = 8.dp)
+                            .bounceClickable(enabled = !isRunning) { onModeChange(mode) }
+                            .padding(vertical = 9.dp)
                     ) {
                         Text(
                             text = mode.displayName,
@@ -223,7 +242,9 @@ fun ThresholdConfigCard(
             Surface(
                 shape = RoundedCornerShape(12.dp),
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .glassBorder(12.dp)
             ) {
                 Row(
                     modifier = Modifier

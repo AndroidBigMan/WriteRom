@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -23,6 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mobiiot.writerom.model.TaskStatus
 import com.mobiiot.writerom.ui.StorageUiState
+import com.mobiiot.writerom.ui.theme.bounceClickable
+import com.mobiiot.writerom.ui.theme.glassBorder
 import kotlin.math.max
 
 @Composable
@@ -36,7 +39,9 @@ fun PerformanceChartCard(
     val tertiaryColor = MaterialTheme.colorScheme.tertiary
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .glassBorder(20.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -53,19 +58,34 @@ fun PerformanceChartCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = "Performance Chart",
-                        tint = primaryColor,
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(primaryColor.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Performance Chart",
+                            tint = primaryColor,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "实时写入性能衰减曲线",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Column {
+                        Text(
+                            text = "实时写入性能衰减曲线",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "SLC 缓存与直写颗粒特征遥测",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
                 Surface(
@@ -73,31 +93,32 @@ fun PerformanceChartCard(
                     color = if (uiState.isSlcExhausted)
                         tertiaryColor.copy(alpha = 0.15f)
                     else
-                        primaryColor.copy(alpha = 0.12f)
+                        primaryColor.copy(alpha = 0.12f),
+                    modifier = Modifier.bounceClickable(onClick = {})
                 ) {
                     Text(
                         text = if (uiState.isSlcExhausted) "⚡ SLC Cache 已耗尽" else "SLC 缓存加速中",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = if (uiState.isSlcExhausted) tertiaryColor else primaryColor,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // 指标快速汇总
+            // 指标快速汇总 Bento 模块
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                MetricItem("当前速率", uiState.formattedSpeed)
-                MetricItem("峰值速率", String.format("%.1f MB/s", uiState.peakSpeedMb))
-                MetricItem("全程均速", String.format("%.1f MB/s", uiState.avgSpeedMb))
+                MetricItem("当前速率", uiState.formattedSpeed, modifier = Modifier.weight(1f))
+                MetricItem("峰值速率", String.format("%.1f MB/s", uiState.peakSpeedMb), modifier = Modifier.weight(1f))
+                MetricItem("全程均速", String.format("%.1f MB/s", uiState.avgSpeedMb), modifier = Modifier.weight(1f))
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Canvas 折线图绘制区域
             Box(
@@ -105,6 +126,7 @@ fun PerformanceChartCard(
                     .fillMaxWidth()
                     .height(150.dp)
                     .background(surfaceVariant.copy(alpha = 0.25f), shape = RoundedCornerShape(12.dp))
+                    .glassBorder(12.dp)
                     .padding(horizontal = 12.dp, vertical = 10.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -246,19 +268,30 @@ fun PerformanceChartCard(
 }
 
 @Composable
-private fun MetricItem(label: String, value: String) {
-    Column {
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = value,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+private fun MetricItem(label: String, value: String, modifier: Modifier = Modifier) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+        modifier = modifier
+            .glassBorder(12.dp)
+            .bounceClickable(onClick = {})
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = label,
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(3.dp))
+            Text(
+                text = value,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
     }
 }

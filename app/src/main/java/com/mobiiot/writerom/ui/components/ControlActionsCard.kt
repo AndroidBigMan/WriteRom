@@ -20,6 +20,8 @@ import com.mobiiot.writerom.ui.StorageUiState
 import com.mobiiot.writerom.ui.theme.ErrorRed
 import com.mobiiot.writerom.ui.theme.SuccessGreen
 import com.mobiiot.writerom.ui.theme.WarningAmber
+import com.mobiiot.writerom.ui.theme.bounceClickable
+import com.mobiiot.writerom.ui.theme.glassBorder
 
 @Composable
 fun ControlActionsCard(
@@ -35,7 +37,9 @@ fun ControlActionsCard(
     var showCleanConfirmDialog by remember { mutableStateOf(false) }
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .glassBorder(20.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -57,21 +61,29 @@ fun ControlActionsCard(
             // 主任务控制按钮
             when (uiState.taskStatus) {
                 TaskStatus.IDLE, TaskStatus.COMPLETED, TaskStatus.STOPPED, TaskStatus.ERROR -> {
-                    Button(
-                        onClick = onStart,
+                    Surface(
                         shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
+                        color = SuccessGreen,
+                        shadowElevation = 3.dp,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp)
+                            .bounceClickable(onClick = onStart)
                     ) {
-                        Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Start")
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = if (uiState.taskStatus == TaskStatus.IDLE) "开始填充 ROM" else "重新开始填充",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Start", tint = Color.White)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (uiState.taskStatus == TaskStatus.IDLE) "开始填充 ROM" else "重新开始填充",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
 
@@ -80,30 +92,44 @@ fun ControlActionsCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Button(
-                            onClick = onPause,
+                        Surface(
                             shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = WarningAmber),
+                            color = WarningAmber,
+                            shadowElevation = 2.dp,
                             modifier = Modifier
                                 .weight(1f)
                                 .height(52.dp)
+                                .bounceClickable(onClick = onPause)
                         ) {
-                            Icon(imageVector = Icons.Default.Refresh, contentDescription = "Pause")
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("暂停", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(imageVector = Icons.Default.Refresh, contentDescription = "Pause", tint = Color.Black)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("暂停", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                            }
                         }
 
-                        Button(
-                            onClick = onStop,
+                        Surface(
                             shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
+                            color = ErrorRed,
+                            shadowElevation = 2.dp,
                             modifier = Modifier
                                 .weight(1f)
                                 .height(52.dp)
+                                .bounceClickable(onClick = onStop)
                         ) {
-                            Icon(imageVector = Icons.Default.Close, contentDescription = "Stop")
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("终止任务", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(imageVector = Icons.Default.Close, contentDescription = "Stop", tint = Color.White)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("终止任务", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
                         }
                     }
                 }
@@ -113,30 +139,44 @@ fun ControlActionsCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Button(
-                            onClick = onResume,
+                        Surface(
                             shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
+                            color = SuccessGreen,
+                            shadowElevation = 2.dp,
                             modifier = Modifier
                                 .weight(1f)
                                 .height(52.dp)
+                                .bounceClickable(onClick = onResume)
                         ) {
-                            Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Resume")
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("恢复填充", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Resume", tint = Color.White)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("恢复填充", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
                         }
 
-                        Button(
-                            onClick = onStop,
+                        Surface(
                             shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
+                            color = ErrorRed,
+                            shadowElevation = 2.dp,
                             modifier = Modifier
                                 .weight(1f)
                                 .height(52.dp)
+                                .bounceClickable(onClick = onStop)
                         ) {
-                            Icon(imageVector = Icons.Default.Close, contentDescription = "Stop")
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("终止任务", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(imageVector = Icons.Default.Close, contentDescription = "Stop", tint = Color.White)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("终止任务", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
                         }
                     }
                 }
@@ -175,20 +215,26 @@ fun ControlActionsCard(
                             }
 
                             // 停止清理按钮
-                            Button(
-                                onClick = onStopClean,
+                            Surface(
                                 shape = RoundedCornerShape(10.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                                modifier = Modifier.height(34.dp)
+                                color = ErrorRed,
+                                modifier = Modifier
+                                    .height(34.dp)
+                                    .bounceClickable(onClick = onStopClean)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Stop Clean",
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("停止清理", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Stop Clean",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("停止清理", fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
 
@@ -245,27 +291,39 @@ fun ControlActionsCard(
             } else {
                 // 一键清理按钮（仅在未运行或已停止时允许）
                 val canClean = uiState.taskStatus != TaskStatus.RUNNING
-                OutlinedButton(
-                    onClick = { showCleanConfirmDialog = true },
-                    enabled = canClean,
+                Surface(
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = ErrorRed
-                    ),
+                    color = if (canClean) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, if (canClean) ErrorRed.copy(alpha = 0.4f) else Color.Gray.copy(alpha = 0.2f)),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
+                        .bounceClickable(
+                            enabled = canClean,
+                            onClick = { showCleanConfirmDialog = true }
+                        )
                 ) {
-                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Clean")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = if (uiState.existingFillerFilesCount > 0)
-                            "一键清理填充数据 (${uiState.existingFillerFilesCount} 个文件)"
-                        else
-                            "一键清理填充数据（恢复空间）",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Clean",
+                            tint = if (canClean) ErrorRed else Color.Gray
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (uiState.existingFillerFilesCount > 0)
+                                "一键清理填充数据 (${uiState.existingFillerFilesCount} 个文件)"
+                            else
+                                "一键清理填充数据（恢复空间）",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (canClean) ErrorRed else Color.Gray
+                        )
+                    }
                 }
             }
         }

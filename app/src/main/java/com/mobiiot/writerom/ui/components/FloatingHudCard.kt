@@ -1,30 +1,11 @@
 package com.mobiiot.writerom.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,9 +16,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mobiiot.writerom.ui.StorageUiState
 import com.mobiiot.writerom.ui.theme.AccentCyan
-import com.mobiiot.writerom.ui.theme.PrimaryBlue
 import com.mobiiot.writerom.ui.theme.SuccessGreen
 import com.mobiiot.writerom.ui.theme.WarningAmber
+import com.mobiiot.writerom.ui.theme.bounceClickable
+import com.mobiiot.writerom.ui.theme.glassBorder
 
 /**
  * 全局悬浮微型仪表盘 (Floating HUD) 开关与配置卡片
@@ -51,13 +33,16 @@ fun FloatingHudCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .glassBorder(20.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-        )
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             // 标题行与开关
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -68,12 +53,20 @@ fun FloatingHudCard(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = "Floating HUD",
-                        tint = AccentCyan,
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(AccentCyan.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Floating HUD",
+                            tint = AccentCyan,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -84,15 +77,15 @@ fun FloatingHudCard(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = if (uiState.isFloatingHudEnabled) SuccessGreen.copy(alpha = 0.2f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (uiState.isFloatingHudEnabled) SuccessGreen.copy(alpha = 0.18f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
                             ) {
                                 Text(
                                     text = if (uiState.isFloatingHudEnabled) "已开启" else "已关闭",
                                     color = if (uiState.isFloatingHudEnabled) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
                                 )
                             }
                         }
@@ -124,17 +117,18 @@ fun FloatingHudCard(
 
             // 权限未授予警告与引导
             if (!uiState.hasOverlayPermission) {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(14.dp))
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(12.dp),
                     color = WarningAmber.copy(alpha = 0.12f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, WarningAmber.copy(alpha = 0.3f)),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .glassBorder(12.dp)
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -147,8 +141,10 @@ fun FloatingHudCard(
                             onClick = onRequestPermission,
                             colors = ButtonDefaults.buttonColors(containerColor = WarningAmber),
                             shape = RoundedCornerShape(8.dp),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                            modifier = Modifier.height(28.dp)
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                            modifier = Modifier
+                                .height(32.dp)
+                                .bounceClickable(onClick = onRequestPermission)
                         ) {
                             Text("去授权", fontSize = 11.sp, color = Color.Black, fontWeight = FontWeight.Bold)
                         }
@@ -156,13 +152,13 @@ fun FloatingHudCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // 特性徽标流式标签
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 HudFeatureChip(text = "边缘磁吸吸附")
                 HudFeatureChip(text = "胶囊/看板双形态")
@@ -177,13 +173,16 @@ fun FloatingHudCard(
 private fun HudFeatureChip(text: String) {
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+        modifier = Modifier
+            .glassBorder(8.dp)
+            .bounceClickable(onClick = {})
     ) {
         Text(
             text = text,
             fontSize = 11.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
         )
     }
 }

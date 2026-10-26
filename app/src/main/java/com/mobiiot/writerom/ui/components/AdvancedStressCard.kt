@@ -1,12 +1,10 @@
 package com.mobiiot.writerom.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,6 +17,8 @@ import androidx.compose.ui.unit.sp
 import com.mobiiot.writerom.model.FragmentSizeLevel
 import com.mobiiot.writerom.model.TaskStatus
 import com.mobiiot.writerom.ui.StorageUiState
+import com.mobiiot.writerom.ui.theme.bounceClickable
+import com.mobiiot.writerom.ui.theme.glassBorder
 
 @Composable
 fun AdvancedStressCard(
@@ -32,7 +32,9 @@ fun AdvancedStressCard(
     val isRunning = uiState.taskStatus == TaskStatus.RUNNING || uiState.taskStatus == TaskStatus.PAUSED
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .glassBorder(20.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -48,31 +50,47 @@ fun AdvancedStressCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Build,
-                        contentDescription = "Advanced",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Build,
+                            contentDescription = "Advanced",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "高级压测与并发设置",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Column {
+                        Text(
+                            text = "高级压测与并发设置",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "多线程吞吐 · 碎片化 · 闪存物理打孔",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                    modifier = Modifier.bounceClickable(onClick = {})
                 ) {
                     Text(
                         text = "v1.2 增强",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
             }
@@ -100,7 +118,7 @@ fun AdvancedStressCard(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -113,7 +131,9 @@ fun AdvancedStressCard(
                             onClick = { onConcurrencyChange(t) },
                             label = { Text("${t}T", fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
                             enabled = !isRunning,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .bounceClickable(enabled = !isRunning) { onConcurrencyChange(t) }
                         )
                     }
                 }
@@ -173,11 +193,13 @@ fun AdvancedStressCard(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .glassBorder(14.dp)
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
+                    Column(modifier = Modifier.padding(14.dp)) {
                         Text(
                             text = "碎片文件规格等级",
                             fontSize = 13.sp,
@@ -193,7 +215,7 @@ fun AdvancedStressCard(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(8.dp))
-                                    .clickable(enabled = !isRunning) { onFragmentSizeLevelChange(level) }
+                                    .bounceClickable(enabled = !isRunning) { onFragmentSizeLevelChange(level) }
                                     .padding(vertical = 3.dp)
                             ) {
                                 RadioButton(

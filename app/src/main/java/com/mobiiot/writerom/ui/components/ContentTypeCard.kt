@@ -1,6 +1,6 @@
 package com.mobiiot.writerom.ui.components
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.sp
 import com.mobiiot.writerom.model.FillContentType
 import com.mobiiot.writerom.model.TaskStatus
 import com.mobiiot.writerom.ui.StorageUiState
+import com.mobiiot.writerom.ui.theme.bounceClickable
+import com.mobiiot.writerom.ui.theme.glassBorder
 
 @Composable
 fun ContentTypeCard(
@@ -30,7 +32,9 @@ fun ContentTypeCard(
     val isRunning = uiState.taskStatus == TaskStatus.RUNNING || uiState.taskStatus == TaskStatus.PAUSED
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .glassBorder(20.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -44,19 +48,34 @@ fun ContentTypeCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = Icons.Default.Build,
-                    contentDescription = "Content Type",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Build,
+                        contentDescription = "Content Type",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
                 Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = "填充内容类型与介质",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Column {
+                    Text(
+                        text = "填充内容类型与介质",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "高熵随机数据、大文件分块与相册介质",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -68,7 +87,7 @@ fun ContentTypeCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
-                        .clickable(enabled = !isRunning) { onContentTypeChange(type) }
+                        .bounceClickable(enabled = !isRunning) { onContentTypeChange(type) }
                         .padding(vertical = 4.dp, horizontal = 4.dp)
                 ) {
                     RadioButton(
@@ -136,7 +155,8 @@ fun ContentTypeCard(
                             color = if (uiState.isFragmentationMode)
                                 MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
                             else
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                            modifier = Modifier.bounceClickable(onClick = {})
                         ) {
                             Text(
                                 text = if (uiState.isFragmentationMode) "碎片化模式生效中" else "${uiState.chunkSizeMb}MB 常规分块生效中",
@@ -167,7 +187,9 @@ fun ContentTypeCard(
                                 )
                             },
                             enabled = !isRunning,
-                            modifier = Modifier.weight(1.1f)
+                            modifier = Modifier
+                                .weight(1.1f)
+                                .bounceClickable(enabled = !isRunning) { onFragmentationToggle(true) }
                         )
 
                         // 常规分块大小 Chips (256MB, 500MB, 1024MB)
@@ -184,7 +206,9 @@ fun ContentTypeCard(
                                     )
                                 },
                                 enabled = !isRunning,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .bounceClickable(enabled = !isRunning) { onChunkSizeChange(sizeMb) }
                             )
                         }
                     }

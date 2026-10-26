@@ -9,11 +9,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mobiiot.writerom.ui.StorageUiState
+import com.mobiiot.writerom.ui.theme.bounceClickable
+import com.mobiiot.writerom.ui.theme.glassBorder
 
 @Composable
 fun HardwareHealthCard(
@@ -30,7 +33,9 @@ fun HardwareHealthCard(
     }
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .glassBorder(20.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -47,31 +52,47 @@ fun HardwareHealthCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = "Hardware Health",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Hardware Health",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "闪存健康与硬件温度感知",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Column {
+                        Text(
+                            text = "闪存健康与芯片感知",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "温度感知 · 热降频 · TBW 估算",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                    modifier = Modifier.bounceClickable(onClick = {})
                 ) {
                     Text(
                         text = "UFS / eMMC 状态",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
             }
@@ -86,8 +107,11 @@ fun HardwareHealthCard(
                 // 左格：实时核心温度
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                    modifier = Modifier.weight(1f)
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .glassBorder(14.dp)
+                        .bounceClickable(onClick = {})
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text(
@@ -124,8 +148,11 @@ fun HardwareHealthCard(
                 // 右格：系统热节流状态
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                    modifier = Modifier.weight(1f)
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .glassBorder(14.dp)
+                        .bounceClickable(onClick = {})
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text(
@@ -154,61 +181,69 @@ fun HardwareHealthCard(
             }
 
             Spacer(modifier = Modifier.height(14.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            Spacer(modifier = Modifier.height(14.dp))
 
-            // 闪存写入寿命感知 (TBW 与 P/E 周期估算)
-            Text(
-                text = "闪存损耗与寿命估算 (TBW 感知)",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+            // 闪存写入寿命感知 (TBW 与 P/E 周期估算 Bento 容器)
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .glassBorder(14.dp)
             ) {
-                Column {
+                Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        text = "WriteRom 历史总写入量",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = uiState.formattedLifetimeBytes,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "等效整盘 P/E 擦写周期",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = String.format("约 %.2f 次循环", uiState.estimatedPeCycles),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
+                        text = "闪存损耗与寿命估算 (TBW 感知)",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = "WriteRom 历史总写入量",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = uiState.formattedLifetimeBytes,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "等效整盘 P/E 擦写周期",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = String.format("约 %.2f 次循环", uiState.estimatedPeCycles),
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "💡 闪存常识：现代 TLC/QLC 颗粒典型擦写寿命约为 500 ~ 3000 次完整循环。持续密集压测时请注意设备散热降温。",
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "💡 闪存常识：现代 TLC/QLC 颗粒典型擦写寿命约为 500 ~ 3000 次完整循环。持续密集压测时请注意设备散热降温。",
-                fontSize = 10.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
