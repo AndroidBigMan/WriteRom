@@ -34,26 +34,29 @@ fun AdvancedStressCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .glassBorder(20.dp),
-        shape = RoundedCornerShape(20.dp),
+            .glassBorder(22.dp),
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(22.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+            // 标题栏与并发碎片状态胶囊（上下平行排列）
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(12.dp))
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
@@ -61,23 +64,16 @@ fun AdvancedStressCard(
                             imageVector = Icons.Default.Build,
                             contentDescription = "Advanced",
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(26.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column {
-                        Text(
-                            text = "高级压测与并发设置",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "多线程吞吐 · 碎片化 · 闪存物理打孔",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "高级压测与并发设置",
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
 
                 Surface(
@@ -86,16 +82,16 @@ fun AdvancedStressCard(
                     modifier = Modifier.bounceClickable(onClick = {})
                 ) {
                     Text(
-                        text = "v1.2 增强",
-                        style = MaterialTheme.typography.labelSmall,
+                        text = "并发与碎片",
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             // 1. 并发线程数设置 (1 ~ 8)
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -106,30 +102,30 @@ fun AdvancedStressCard(
                 ) {
                     Text(
                         text = "多线程并发写入",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "${uiState.concurrencyThreads} 线程并发",
-                        fontSize = 14.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     listOf(1, 2, 4, 8).forEach { t ->
                         val isSelected = uiState.concurrencyThreads == t
                         FilterChip(
                             selected = isSelected,
                             onClick = { onConcurrencyChange(t) },
-                            label = { Text("${t}T", fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
+                            label = { Text("${t}T", fontSize = 14.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium) },
                             enabled = !isRunning,
                             modifier = Modifier
                                 .weight(1f)
@@ -137,18 +133,6 @@ fun AdvancedStressCard(
                         )
                     }
                 }
-
-                Text(
-                    text = when (uiState.concurrencyThreads) {
-                        1 -> "单线程：温和稳定占位，设备低发热"
-                        2 -> "双线程：平衡吞吐，适合常规压力测试"
-                        4 -> "4 线程：高速并发，充分利用多核与多通道闪存"
-                        else -> "8 线程：极限满载压测，测试高 I/O 竞争与降频表现"
-                    },
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -166,18 +150,19 @@ fun AdvancedStressCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "碎片化海量小文件模式",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
+                        text = "碎片化小文件模式",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = when {
-                            !isDataContentType -> "不可用：当前已选【${uiState.contentType.displayName}】，碎片化仅支持普通数据文件"
-                            uiState.isFragmentationMode -> "已开启：接管上方分块大小，以 ${uiState.fragmentSizeLevel.label} 散列微小文件进行填充"
-                            else -> "关闭：遵循上方分块设置（当前生效：${uiState.chunkSizeMb}MB 连续写入）"
+                            !isDataContentType -> "当前类型不支持碎片化模式"
+                            uiState.isFragmentationMode -> "已开启：生成 ${uiState.fragmentSizeLevel.label} 散列小文件"
+                            else -> "关闭：常规连续大文件写入"
                         },
-                        fontSize = 11.sp,
+                        fontSize = 13.5.sp,
                         color = if (uiState.isFragmentationMode) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -190,50 +175,50 @@ fun AdvancedStressCard(
 
             // 碎片化子配置项
             if (uiState.isFragmentationMode) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Surface(
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .glassBorder(14.dp)
+                        .glassBorder(16.dp)
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             text = "碎片文件规格等级",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         FragmentSizeLevel.values().forEach { level ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(10.dp))
                                     .bounceClickable(enabled = !isRunning) { onFragmentSizeLevelChange(level) }
-                                    .padding(vertical = 3.dp)
+                                    .padding(vertical = 5.dp)
                             ) {
                                 RadioButton(
                                     selected = uiState.fragmentSizeLevel == level,
                                     onClick = { onFragmentSizeLevelChange(level) },
                                     enabled = !isRunning
                                 )
-                                Spacer(modifier = Modifier.width(6.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = level.label,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (uiState.fragmentSizeLevel == level) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = 15.sp,
+                                    fontWeight = if (uiState.fragmentSizeLevel == level) FontWeight.Bold else FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         // 穿插打孔选项
                         Row(
@@ -244,13 +229,14 @@ fun AdvancedStressCard(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "穿插空洞打孔 (Write & Punch)",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "每写满500个小文件随机剔除30%，在闪存块中制造真实的物理不连续碎片",
-                                    fontSize = 10.sp,
+                                    text = "每满 500 文件随机剔除 30%，制造物理碎块",
+                                    fontSize = 13.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }

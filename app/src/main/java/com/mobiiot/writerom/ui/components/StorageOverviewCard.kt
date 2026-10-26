@@ -32,27 +32,29 @@ fun StorageOverviewCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .glassBorder(20.dp),
-        shape = RoundedCornerShape(20.dp),
+            .glassBorder(22.dp),
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(22.dp)
         ) {
-            // 标题栏与物理容量胶囊
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+            // 标题栏与物理容量胶囊（上下平行排列）
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(12.dp))
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
@@ -60,23 +62,16 @@ fun StorageOverviewCard(
                             imageVector = Icons.Default.Info,
                             contentDescription = "Storage",
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(26.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column {
-                        Text(
-                            text = "手机 ROM 存储状态",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "闪存空间与动态分配监控",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "手机 ROM 存储状态",
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
 
                 Surface(
@@ -86,15 +81,15 @@ fun StorageOverviewCard(
                 ) {
                     Text(
                         text = "总容量: ${uiState.formattedTotal}",
-                        style = MaterialTheme.typography.labelMedium,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // 存储进度条与占比
             val progressFraction = (uiState.percentUsed / 100.0).toFloat().coerceIn(0f, 1f)
@@ -129,57 +124,47 @@ fun StorageOverviewCard(
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(gaugeGradientColors.last())
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "已占用: ${uiState.formattedUsed} (${String.format("%.1f", uiState.percentUsed)}%)",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(gaugeGradientColors.last())
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "剩余: ${uiState.formattedFree}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF10B981),
+                        text = "已占用: ${uiState.formattedUsed} (${String.format("%.1f", uiState.percentUsed)}%)",
+                        fontSize = 15.5.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold
                     )
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // 霓虹多段渐变进度条 (带高光光感)
+                // 霓虹多段渐变进度条 (加高至 24dp，带顶部高光折射)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(18.dp)
-                        .clip(RoundedCornerShape(9.dp))
+                        .height(24.dp)
+                        .clip(RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
-                        .glassBorder(cornerRadius = 9.dp, strokeWidth = 0.5.dp)
+                        .glassBorder(cornerRadius = 12.dp, strokeWidth = 0.5.dp)
                 ) {
                     // 渐变填充层
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(animatedProgress)
                             .fillMaxHeight()
-                            .clip(RoundedCornerShape(9.dp))
+                            .clip(RoundedCornerShape(12.dp))
                             .background(Brush.horizontalGradient(gaugeGradientColors))
                     ) {
                         // 顶部微光高光层 (Glass reflection highlight)
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(6.dp)
+                                .height(8.dp)
                                 .background(
                                     Brush.verticalGradient(
                                         listOf(
@@ -193,12 +178,12 @@ fun StorageOverviewCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            // 底部 Bento 形式细项标签卡
+            // 底部 Bento 形式细项标签卡 (放大字号与触控区域)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 BentoLegendPill(
                     indicatorColor = gaugeGradientColors.last(),
@@ -225,32 +210,33 @@ private fun BentoLegendPill(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
         modifier = modifier
-            .glassBorder(12.dp)
+            .glassBorder(14.dp)
             .bounceClickable(onClick = {})
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(8.dp)
+                    .size(10.dp)
                     .clip(CircleShape)
                     .background(indicatorColor)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(10.dp))
             Column {
                 Text(
                     text = label,
-                    fontSize = 11.sp,
+                    fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = value,
-                    fontSize = 13.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )

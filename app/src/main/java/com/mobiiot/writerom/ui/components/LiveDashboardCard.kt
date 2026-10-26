@@ -44,27 +44,29 @@ fun LiveDashboardCard(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .glassBorder(20.dp),
-            shape = RoundedCornerShape(20.dp),
+                .glassBorder(22.dp),
+            shape = RoundedCornerShape(22.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp)
+                    .padding(22.dp)
             ) {
-                // 顶部状态栏
-                Row(
+                // 顶部状态栏（上下平行排列，精简移除冗余写入规格胶囊）
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
-                                .clip(RoundedCornerShape(10.dp))
+                                .size(44.dp)
+                                .clip(RoundedCornerShape(12.dp))
                                 .background(statusColor.copy(alpha = 0.15f)),
                             contentAlignment = Alignment.Center
                         ) {
@@ -72,13 +74,13 @@ fun LiveDashboardCard(
                                 imageVector = Icons.Default.Info,
                                 contentDescription = "Live Status",
                                 tint = statusColor,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(26.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = "实时写入监控",
-                            style = MaterialTheme.typography.titleMedium,
+                            fontSize = 19.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -86,7 +88,7 @@ fun LiveDashboardCard(
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Surface(
                             shape = RoundedCornerShape(10.dp),
@@ -95,27 +97,10 @@ fun LiveDashboardCard(
                         ) {
                             Text(
                                 text = "${uiState.activeThreads} 线程并发",
-                                style = MaterialTheme.typography.labelSmall,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (uiState.isFragmentationMode)
-                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
-                            else
-                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
-                            modifier = Modifier.bounceClickable(onClick = {})
-                        ) {
-                            Text(
-                                text = uiState.effectiveWriteSpec,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = if (uiState.isFragmentationMode) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                             )
                         }
 
@@ -126,16 +111,16 @@ fun LiveDashboardCard(
                         ) {
                             Text(
                                 text = uiState.taskStatus.label,
-                                style = MaterialTheme.typography.labelMedium,
+                                fontSize = 13.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = statusColor,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
                 // 瞬时写入速度大字
                 Row(
@@ -146,12 +131,13 @@ fun LiveDashboardCard(
                     Column {
                         Text(
                             text = "瞬时写入速率",
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = uiState.formattedSpeed,
-                            fontSize = 28.sp,
+                            fontSize = 34.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = statusColor
                         )
@@ -160,21 +146,22 @@ fun LiveDashboardCard(
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             text = "写入进度",
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = String.format("%.1f%%", uiState.progressPercent),
-                            fontSize = 24.sp,
+                            fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // 进度条 (带高光)
+                // 进度条 (加高至 20dp，带顶部微光高光)
                 val animatedProgress by animateFloatAsState(
                     targetValue = (uiState.progressPercent / 100f).coerceIn(0f, 1f),
                     animationSpec = spring(
@@ -186,22 +173,22 @@ fun LiveDashboardCard(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(14.dp)
-                        .clip(RoundedCornerShape(7.dp))
+                        .height(20.dp)
+                        .clip(RoundedCornerShape(10.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                        .glassBorder(cornerRadius = 7.dp, strokeWidth = 0.5.dp)
+                        .glassBorder(cornerRadius = 10.dp, strokeWidth = 0.5.dp)
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(animatedProgress)
                             .fillMaxHeight()
-                            .clip(RoundedCornerShape(7.dp))
+                            .clip(RoundedCornerShape(10.dp))
                             .background(statusColor)
                     ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(5.dp)
+                                .height(7.dp)
                                 .background(
                                     Brush.verticalGradient(
                                         listOf(
@@ -214,13 +201,13 @@ fun LiveDashboardCard(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
-                // 统计网格 4 项 Bento 容器
+                // 统计网格 4 项 Bento 容器 (放大字号与间距)
                 val formattedCount = java.text.NumberFormat.getIntegerInstance().format(uiState.filesCreatedCount)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     BentoMetricTile(
                         label = "已写入数据",
@@ -234,11 +221,11 @@ fun LiveDashboardCard(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     BentoMetricTile(
                         label = "已耗时",
@@ -256,7 +243,7 @@ fun LiveDashboardCard(
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "当前写入: ${uiState.currentFileName}",
-                        fontSize = 11.sp,
+                        fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1
                     )
@@ -266,8 +253,8 @@ fun LiveDashboardCard(
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = uiState.statusMessage,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
                         color = statusColor
                     )
                 }
@@ -283,23 +270,23 @@ private fun BentoMetricTile(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
         modifier = modifier
-            .glassBorder(12.dp)
+            .glassBorder(14.dp)
             .bounceClickable(onClick = {})
     ) {
-        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp)) {
             Text(
                 text = label,
-                fontSize = 11.sp,
+                fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = value,
-                fontSize = 13.5.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.5.sp,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
         }

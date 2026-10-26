@@ -67,18 +67,11 @@ fun StorageFillerScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text(
-                            text = "ROM 存储填充助手",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "容量压测 · 边缘测试 · 闪存填满",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Text(
+                        text = "ROM 存储填充助手",
+                        fontSize = 21.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 actions = {
                     IconButton(
@@ -88,7 +81,8 @@ fun StorageFillerScreen(
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Refresh",
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 },
@@ -108,53 +102,54 @@ fun StorageFillerScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = if (isTablet) 20.dp else 16.dp, vertical = 12.dp)
-                    .padding(bottom = if (isTablet) 100.dp else 84.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(horizontal = if (isTablet) 20.dp else 16.dp, vertical = 14.dp)
+                    .padding(bottom = if (isTablet) 110.dp else 96.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
-                // 权限提示横幅 (若未获得权限)
+                // 权限提示横幅 (若未获得权限，精简为一行清晰说明)
                 if (!uiState.hasStoragePermission) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .glassBorder(14.dp),
-                        shape = RoundedCornerShape(14.dp),
+                            .glassBorder(16.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = WarningAmber.copy(alpha = 0.15f))
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(14.dp),
+                                .padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Warning,
                                 contentDescription = "Warning",
                                 tint = WarningAmber,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(30.dp)
                             )
-                            Spacer(modifier = Modifier.width(10.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "需要所有文件管理权限",
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp,
+                                    fontSize = 15.sp,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "授予权限以支持在根目录直接快速大批量填充与清理，若未授予将使用应用专属目录。",
-                                    fontSize = 12.sp,
+                                    text = "需要该权限以直接在设备根目录极速填充与清理。",
+                                    fontSize = 13.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
                             Button(
                                 onClick = onRequestStoragePermission,
                                 colors = ButtonDefaults.buttonColors(containerColor = WarningAmber),
                                 shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier.bounceClickable(onClick = onRequestStoragePermission)
                             ) {
-                                Text("授权", fontSize = 12.sp, color = Color.Black, fontWeight = FontWeight.Bold)
+                                Text("去授权", fontSize = 13.sp, color = Color.Black, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -166,12 +161,12 @@ fun StorageFillerScreen(
                     // ==========================================
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(18.dp)
                     ) {
                         // 左栏：遥测与状态 (40% ~ 50% 视觉锚点)
                         Column(
                             modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            verticalArrangement = Arrangement.spacedBy(18.dp)
                         ) {
                             StorageOverviewCard(uiState = uiState)
                             LiveDashboardCard(uiState = uiState)
@@ -182,7 +177,7 @@ fun StorageFillerScreen(
                         // 右栏：控制与参数配置
                         Column(
                             modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            verticalArrangement = Arrangement.spacedBy(18.dp)
                         ) {
                             FloatingHudCard(
                                 uiState = uiState,
@@ -248,17 +243,17 @@ fun StorageFillerScreen(
                     // 6. 策略与参数配置区域（任务进行中支持智能折叠）
                     if (isRunning) {
                         Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .glassBorder(14.dp)
+                                .glassBorder(16.dp)
                                 .bounceClickable { phoneConfigExpanded = !phoneConfigExpanded }
                         ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -267,33 +262,33 @@ fun StorageFillerScreen(
                                         imageVector = Icons.Default.Settings,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(22.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Spacer(modifier = Modifier.width(10.dp))
                                     Text(
-                                        text = "填充策略与高级配置参数",
-                                        style = MaterialTheme.typography.titleSmall,
+                                        text = "填充策略与高级配置",
+                                        fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
-                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     Surface(
                                         shape = RoundedCornerShape(6.dp),
                                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                                     ) {
                                         Text(
                                             text = if (phoneConfigExpanded) "已展开" else "执行中已折叠",
-                                            fontSize = 11.sp,
+                                            fontSize = 12.5.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
                                         )
                                     }
                                 }
                                 Text(
                                     text = if (phoneConfigExpanded) "收起 ▲" else "展开查看 ▼",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -304,7 +299,7 @@ fun StorageFillerScreen(
                             enter = fadeIn() + expandVertically(),
                             exit = fadeOut() + shrinkVertically()
                         ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
                                 ThresholdConfigCard(
                                     uiState = uiState,
                                     onModeChange = onModeChange,
@@ -381,7 +376,7 @@ fun StorageFillerScreen(
                 onStopClean = onStopClean,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(horizontal = if (isTablet) 32.dp else 14.dp, vertical = 10.dp)
+                    .padding(horizontal = if (isTablet) 32.dp else 14.dp, vertical = 12.dp)
             )
         }
     }

@@ -35,27 +35,29 @@ fun HardwareHealthCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .glassBorder(20.dp),
-        shape = RoundedCornerShape(20.dp),
+            .glassBorder(22.dp),
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(22.dp)
         ) {
-            // 标题栏
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+            // 标题栏与 UFS/eMMC 状态胶囊（上下平行排列）
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(12.dp))
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
@@ -63,23 +65,16 @@ fun HardwareHealthCard(
                             imageVector = Icons.Default.Info,
                             contentDescription = "Hardware Health",
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(26.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column {
-                        Text(
-                            text = "闪存健康与芯片感知",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "温度感知 · 热降频 · TBW 估算",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "闪存健康与芯片感知",
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
 
                 Surface(
@@ -89,57 +84,57 @@ fun HardwareHealthCard(
                 ) {
                     Text(
                         text = "UFS / eMMC 状态",
-                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            // 温度与热状态 Bento 双格
+            // 温度与热状态 Bento 双格 (放大内部字号与尺寸)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // 左格：实时核心温度
                 Surface(
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                     modifier = Modifier
                         .weight(1f)
-                        .glassBorder(14.dp)
+                        .glassBorder(16.dp)
                         .bounceClickable(onClick = {})
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             text = "设备芯片温度",
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
                                 text = if (temp > 0f) String.format("%.1f", temp) else "--.-",
-                                fontSize = 24.sp,
+                                fontSize = 30.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = tempColor
                             )
                             Text(
                                 text = " °C",
-                                fontSize = 14.sp,
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = tempColor,
-                                modifier = Modifier.padding(bottom = 2.dp)
+                                modifier = Modifier.padding(bottom = 3.dp)
                             )
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = tempDesc,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
                             color = tempColor
                         )
                     }
@@ -147,33 +142,34 @@ fun HardwareHealthCard(
 
                 // 右格：系统热节流状态
                 Surface(
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                     modifier = Modifier
                         .weight(1f)
-                        .glassBorder(14.dp)
+                        .glassBorder(16.dp)
                         .bounceClickable(onClick = {})
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             text = "系统热降频 (Throttling)",
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = uiState.thermalStatusLabel,
-                            fontSize = 15.sp,
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (uiState.thermalStatusLevel >= 3) Color(0xFFEF4444) else MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = if (uiState.thermalStatusLevel >= 3)
-                                "I/O 调度与时钟受温控限制"
+                                "I/O 调度受温控限制"
                             else
-                                "闪存总线全速运行中",
-                            fontSize = 11.sp,
+                                "闪存总线全速运行",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -184,17 +180,17 @@ fun HardwareHealthCard(
 
             // 闪存写入寿命感知 (TBW 与 P/E 周期估算 Bento 容器)
             Surface(
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .glassBorder(14.dp)
+                    .glassBorder(16.dp)
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "闪存损耗与寿命估算 (TBW 感知)",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
+                        text = "闪存损耗与寿命估算 (TBW)",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
@@ -206,14 +202,14 @@ fun HardwareHealthCard(
                     ) {
                         Column {
                             Text(
-                                text = "WriteRom 历史总写入量",
-                                fontSize = 11.sp,
+                                text = "历史总写入量",
+                                fontSize = 13.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
+                            Spacer(modifier = Modifier.height(3.dp))
                             Text(
                                 text = uiState.formattedLifetimeBytes,
-                                fontSize = 15.sp,
+                                fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -222,26 +218,18 @@ fun HardwareHealthCard(
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
                                 text = "等效整盘 P/E 擦写周期",
-                                fontSize = 11.sp,
+                                fontSize = 13.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
+                            Spacer(modifier = Modifier.height(3.dp))
                             Text(
                                 text = String.format("约 %.2f 次循环", uiState.estimatedPeCycles),
-                                fontSize = 15.sp,
+                                fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "💡 闪存常识：现代 TLC/QLC 颗粒典型擦写寿命约为 500 ~ 3000 次完整循环。持续密集压测时请注意设备散热降温。",
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
             }
         }

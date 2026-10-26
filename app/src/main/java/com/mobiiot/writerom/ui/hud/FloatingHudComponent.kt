@@ -12,6 +12,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -178,7 +179,7 @@ fun FloatingHudComponent(
                 colors = CardDefaults.cardColors(containerColor = DeepNavy.copy(alpha = 0.94f)),
                 border = androidx.compose.foundation.BorderStroke(1.2.dp, Color.White.copy(alpha = 0.25f)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
-                modifier = Modifier.width(280.dp)
+                modifier = Modifier.width(295.dp)
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     // 顶部标题栏
@@ -316,26 +317,28 @@ fun FloatingHudComponent(
                                     onClick = onTogglePause,
                                     shape = RoundedCornerShape(10.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = WarningAmber),
+                                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                                     modifier = Modifier
                                         .weight(1f)
-                                        .height(34.dp)
+                                        .height(36.dp)
                                 ) {
                                     Icon(imageVector = Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("暂停", fontSize = 12.sp, color = Color.Black, fontWeight = FontWeight.Bold)
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text("暂停", fontSize = 12.sp, color = Color.Black, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                                 }
 
                                 Button(
                                     onClick = onStopTask,
                                     shape = RoundedCornerShape(10.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
+                                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                                     modifier = Modifier
                                         .weight(1f)
-                                        .height(34.dp)
+                                        .height(36.dp)
                                 ) {
                                     Icon(imageVector = Icons.Default.Close, contentDescription = null, modifier = Modifier.size(14.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("终止", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text("停止", fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                                 }
                             }
 
@@ -344,26 +347,28 @@ fun FloatingHudComponent(
                                     onClick = onTogglePause,
                                     shape = RoundedCornerShape(10.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
+                                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                                     modifier = Modifier
                                         .weight(1f)
-                                        .height(34.dp)
+                                        .height(36.dp)
                                 ) {
                                     Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(14.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("继续", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text("继续", fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                                 }
 
                                 Button(
                                     onClick = onStopTask,
                                     shape = RoundedCornerShape(10.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
+                                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                                     modifier = Modifier
                                         .weight(1f)
-                                        .height(34.dp)
+                                        .height(36.dp)
                                 ) {
                                     Icon(imageVector = Icons.Default.Close, contentDescription = null, modifier = Modifier.size(14.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("终止", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text("停止", fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                                 }
                             }
 
@@ -372,13 +377,14 @@ fun FloatingHudComponent(
                                     onClick = onOpenApp,
                                     shape = RoundedCornerShape(10.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                                     modifier = Modifier
                                         .weight(1f)
-                                        .height(34.dp)
+                                        .height(36.dp)
                                 ) {
                                     Icon(imageVector = Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null, modifier = Modifier.size(14.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("返回应用开始填充", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Text("返回应用开始填充", fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
                                 }
                             }
                         }
@@ -386,9 +392,10 @@ fun FloatingHudComponent(
                         OutlinedButton(
                             onClick = { isExpanded = false },
                             shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.height(34.dp)
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                            modifier = Modifier.height(36.dp)
                         ) {
-                            Text("收起", fontSize = 12.sp, color = Color.White.copy(alpha = 0.8f))
+                            Text("收起", fontSize = 12.sp, color = Color.White.copy(alpha = 0.8f), maxLines = 1, softWrap = false)
                         }
                     }
                 }

@@ -206,8 +206,7 @@ class FloatingHudManager private constructor(private val context: Context) {
                 @Suppress("DEPRECATION")
                 WindowManager.LayoutParams.TYPE_PHONE
             },
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
@@ -227,6 +226,36 @@ class FloatingHudManager private constructor(private val context: Context) {
             setViewTreeLifecycleOwner(owner)
             setViewTreeSavedStateRegistryOwner(owner)
             setViewTreeViewModelStoreOwner(owner)
+
+            // 监听视图大小变化（例如：空闲->开始填充速度文字变长，或展开/收起卡片），实时自动校准 X/Y 坐标，彻底防止与右侧屏幕发生遮挡
+            addOnLayoutChangeListener { v, left, top, right, bottom, _, _, _, _ ->
+                val newWidth = right - left
+                val newHeight = bottom - top
+                val p = this@FloatingHudManager.layoutParams ?: return@addOnLayoutChangeListener
+                val dm = context.resources.displayMetrics
+                val screenW = dm.widthPixels
+                val screenH = dm.heightPixels
+
+                var needsUpdate = false
+
+                // 右侧防遮挡：若视图右边缘超出屏幕可见范围，自动向左回拉对齐至安全边距
+                if (newWidth > 0 && p.x + newWidth > screenW - 12) {
+                    p.x = (screenW - newWidth - 12).coerceAtLeast(12)
+                    needsUpdate = true
+                }
+                // 底部防超出
+                if (newHeight > 0 && p.y + newHeight > screenH - 40) {
+                    p.y = (screenH - newHeight - 40).coerceAtLeast(40)
+                    needsUpdate = true
+                }
+
+                if (needsUpdate) {
+                    try {
+                        windowManager.updateViewLayout(v, p)
+                    } catch (ignored: Exception) {
+                    }
+                }
+            }
 
             setContent {
                 WriteRomTheme {
@@ -258,13 +287,21 @@ class FloatingHudManager private constructor(private val context: Context) {
     private fun handleDrag(dx: Float, dy: Float) {
         val params = layoutParams ?: return
         val view = composeView ?: return
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
 
         params.x += dx.toInt()
         params.y += dy.toInt()
 
+        val viewWidth = view.width.coerceAtLeast(100)
+        val viewHeight = view.height.coerceAtLeast(40)
+
+        // 水平方向防移出屏幕
+        params.x = params.x.coerceIn(12, (screenWidth - viewWidth - 12).coerceAtLeast(12))
+
         // 垂直方向防移出屏幕
-        val displayMetrics = context.resources.displayMetrics
-        params.y = params.y.coerceIn(40, displayMetrics.heightPixels - 120)
+        params.y = params.y.coerceIn(40, (screenHeight - viewHeight - 40).coerceAtLeast(40))
 
         windowManager.updateViewLayout(view, params)
     }
@@ -282,7 +319,7 @@ class FloatingHudManager private constructor(private val context: Context) {
         val targetX = if (params.x + viewWidth / 2 < screenWidth / 2) {
             16
         } else {
-            screenWidth - viewWidth - 16
+            (screenWidth - viewWidth - 16).coerceAtLeast(16)
         }
 
         val startX = params.x

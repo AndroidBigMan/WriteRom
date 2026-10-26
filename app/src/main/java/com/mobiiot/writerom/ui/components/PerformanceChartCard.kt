@@ -41,27 +41,29 @@ fun PerformanceChartCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .glassBorder(20.dp),
-        shape = RoundedCornerShape(20.dp),
+            .glassBorder(22.dp),
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(22.dp)
         ) {
-            // 标题行
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+            // 标题行与 SLC 状态胶囊（上下平行排列）
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(12.dp))
                             .background(primaryColor.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
@@ -69,23 +71,16 @@ fun PerformanceChartCard(
                             imageVector = Icons.Default.Info,
                             contentDescription = "Performance Chart",
                             tint = primaryColor,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(26.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column {
-                        Text(
-                            text = "实时写入性能衰减曲线",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "SLC 缓存与直写颗粒特征遥测",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "实时写入性能衰减曲线",
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
 
                 Surface(
@@ -98,36 +93,36 @@ fun PerformanceChartCard(
                 ) {
                     Text(
                         text = if (uiState.isSlcExhausted) "⚡ SLC Cache 已耗尽" else "SLC 缓存加速中",
-                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (uiState.isSlcExhausted) tertiaryColor else primaryColor,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            // 指标快速汇总 Bento 模块
+            // 指标快速汇总 Bento 模块 (放大字号)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 MetricItem("当前速率", uiState.formattedSpeed, modifier = Modifier.weight(1f))
                 MetricItem("峰值速率", String.format("%.1f MB/s", uiState.peakSpeedMb), modifier = Modifier.weight(1f))
                 MetricItem("全程均速", String.format("%.1f MB/s", uiState.avgSpeedMb), modifier = Modifier.weight(1f))
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Canvas 折线图绘制区域
+            // Canvas 折线图绘制区域 (高度增大至 175dp)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp)
-                    .background(surfaceVariant.copy(alpha = 0.25f), shape = RoundedCornerShape(12.dp))
-                    .glassBorder(12.dp)
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                    .height(175.dp)
+                    .background(surfaceVariant.copy(alpha = 0.25f), shape = RoundedCornerShape(14.dp))
+                    .glassBorder(14.dp)
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (history.size < 2) {
@@ -137,7 +132,7 @@ fun PerformanceChartCard(
                                 "启动填充后将实时采样并绘制闪存性能衰减趋势"
                             else
                                 "正在采集初始写入样本 (每秒刷新)...",
-                            fontSize = 12.sp,
+                            fontSize = 13.5.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -225,7 +220,7 @@ fun PerformanceChartCard(
                             path = strokePath,
                             color = primaryColor,
                             style = Stroke(
-                                width = 2.5.dp.toPx(),
+                                width = 3.dp.toPx(),
                                 cap = StrokeCap.Round
                             )
                         )
@@ -234,33 +229,25 @@ fun PerformanceChartCard(
                         val lastPoint = points.last()
                         drawCircle(
                             color = primaryColor.copy(alpha = 0.3f),
-                            radius = 6.dp.toPx(),
+                            radius = 7.dp.toPx(),
                             center = lastPoint
                         )
                         drawCircle(
                             color = primaryColor,
-                            radius = 3.dp.toPx(),
+                            radius = 3.5.dp.toPx(),
                             center = lastPoint
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // 说明注解
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            if (uiState.isSlcExhausted) {
+                Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = if (uiState.isSlcExhausted)
-                        "⚠️ 写入速率大幅下降：模拟真实闪存 SLC Cache 耗尽后的物理颗粒直写状态"
-                    else
-                        "💡 闪存特征：初期由 SLC Cache 高速爆发，耗尽后将回落至物理直写区",
-                    fontSize = 11.sp,
-                    color = if (uiState.isSlcExhausted) tertiaryColor else MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "⚠️ SLC 缓存已耗尽，已回落至闪存颗粒原生直写区",
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = tertiaryColor
                 )
             }
         }
@@ -270,25 +257,25 @@ fun PerformanceChartCard(
 @Composable
 private fun MetricItem(label: String, value: String, modifier: Modifier = Modifier) {
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
         modifier = modifier
-            .glassBorder(12.dp)
+            .glassBorder(14.dp)
             .bounceClickable(onClick = {})
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = label,
-                fontSize = 11.sp,
+                fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(3.dp))
             Text(
                 text = value,
-                fontSize = 14.sp,
+                fontSize = 16.5.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
