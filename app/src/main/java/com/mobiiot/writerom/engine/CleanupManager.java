@@ -7,6 +7,7 @@ import android.os.Looper;
 import android.os.SystemClock;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.mobiiot.writerom.generator.ContactsGenerator;
 import com.mobiiot.writerom.utils.StorageHelper;
 import java.io.File;
 import java.util.ArrayList;
@@ -55,6 +56,13 @@ public class CleanupManager {
             List<String> deletedPaths = new ArrayList<>();
 
             deleteRecursive(dir, dir, stats, reclaimed, lastReportTime, deletedPaths, callback);
+
+            if (!isCancelled.get()) {
+                // 清理所有测试生成的联系人并释放 SQLite 数据空间
+                int contactsDeleted = ContactsGenerator.cleanAllContacts(context);
+                stats[0] += contactsDeleted;
+                reclaimed[0] += contactsDeleted * 2048L;
+            }
 
             // 清理系统 MediaStore 中被删除文件的残留记录
             if (!deletedPaths.isEmpty()) {
@@ -133,7 +141,9 @@ public class CleanupManager {
 
     public int countExistingFillerFiles() {
         File dir = StorageHelper.getDedicatedStorageDir(context);
-        return countRecursive(dir);
+        int files = countRecursive(dir);
+        int contacts = ContactsGenerator.countExistingContacts(context);
+        return files + contacts;
     }
 
     private int countRecursive(File current) {

@@ -213,31 +213,33 @@ fun ContentTypeCard(
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // 导入系统相册开关
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "导入系统相册",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = if (uiState.importToMediaGallery) "直接同步至系统相册索引" else "存放在应用专属隔离目录",
-                        fontSize = 13.5.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+            // 导入系统相册开关 (仅在包含多媒体时展示)
+            if (uiState.contentType == FillContentType.IMAGE || uiState.contentType == FillContentType.VIDEO || uiState.contentType == FillContentType.MIXED) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "导入系统相册",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = if (uiState.importToMediaGallery) "直接同步至系统相册索引" else "存放在应用专属隔离目录",
+                            fontSize = 13.5.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = uiState.importToMediaGallery,
+                        onCheckedChange = onMediaGalleryToggle,
+                        enabled = !isRunning
                     )
                 }
-                Switch(
-                    checked = uiState.importToMediaGallery,
-                    onCheckedChange = onMediaGalleryToggle,
-                    enabled = !isRunning
-                )
             }
         }
     }

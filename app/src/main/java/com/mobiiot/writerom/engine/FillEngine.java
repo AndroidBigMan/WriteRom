@@ -6,6 +6,7 @@ import android.os.Looper;
 import android.os.SystemClock;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.mobiiot.writerom.generator.ContactsGenerator;
 import com.mobiiot.writerom.generator.FileGenerator;
 import com.mobiiot.writerom.generator.FragmentationGenerator;
 import com.mobiiot.writerom.generator.ImageGenerator;
@@ -272,10 +273,11 @@ public class FillEngine {
                     int fIndex = (int) globalFileIndex.incrementAndGet();
                     FillContentType currentType = config.getContentType();
                     if (currentType == FillContentType.MIXED) {
-                        int mod = fIndex % 3;
+                        int mod = fIndex % 4;
                         if (mod == 1) currentType = FillContentType.RAW_FILE;
                         else if (mod == 2) currentType = FillContentType.IMAGE;
-                        else currentType = FillContentType.VIDEO;
+                        else if (mod == 3) currentType = FillContentType.VIDEO;
+                        else currentType = FillContentType.CONTACTS;
                     }
 
                     File generatedFile = null;
@@ -300,6 +302,15 @@ public class FillEngine {
                             generatedFile = VideoGenerator.createVideoFile(dir, fIndex, vidSize, callback);
                             if (config.isImportToMediaGallery()) {
                                 StorageHelper.registerVideoToMediaStore(context, generatedFile);
+                            }
+                            break;
+
+                        case CONTACTS:
+                            int batchSize = 25;
+                            currentFileName = String.format("联系人: [WriteRom] 批次 #%04d (%d条)", fIndex, batchSize);
+                            int created = ContactsGenerator.createContactsBatch(context, fIndex * batchSize, batchSize, callback);
+                            if (created > 0) {
+                                filesCreatedCount.addAndGet(created);
                             }
                             break;
                     }

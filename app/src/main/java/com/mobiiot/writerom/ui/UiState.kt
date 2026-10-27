@@ -56,6 +56,7 @@ data class StorageUiState @JvmOverloads constructor(
     // 权限与清理
     val hasStoragePermission: Boolean = true,
     val hasNotificationPermission: Boolean = true,
+    val hasContactsPermission: Boolean = true,
     val isCleaning: Boolean = false,
     val existingFillerFilesCount: Int = 0,
     val cleaningDeletedCount: Int = 0,
@@ -84,6 +85,7 @@ data class StorageUiState @JvmOverloads constructor(
         get() = when {
             contentType == FillContentType.IMAGE -> "合规 JPEG 图片"
             contentType == FillContentType.VIDEO -> "标准 MP4 视频"
+            contentType == FillContentType.CONTACTS -> "电话联系人 (通讯录)"
             isFragmentationMode -> when (fragmentSizeLevel) {
                 FragmentSizeLevel.TINY_4K_16K -> "4K~16K 碎片"
                 FragmentSizeLevel.SMALL_32K_128K -> "32K~128K 碎片"

@@ -43,6 +43,7 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
     private static final int REQUEST_CODE_NOTIF = 101;
     private static final int REQUEST_CODE_ALL_FILES = 102;
     private static final int REQUEST_CODE_OVERLAY = 103;
+    private static final int REQUEST_CODE_CONTACTS = 104;
 
     private ComposeView composeView;
     private UiBridge.BridgeController bridgeController;
@@ -190,6 +191,7 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
     private void updateUiState() {
         boolean hasStoragePermission = checkHasStoragePermission();
         boolean hasNotifPermission = checkHasNotificationPermission();
+        boolean hasContactsPermission = checkHasContactsPermission();
 
         long estimatedFill = fillConfig.calculateTargetFillBytes(currentStorage);
         String formattedEst = StorageHelper.formatSize(estimatedFill);
@@ -247,6 +249,7 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
                 statusMessage,
                 hasStoragePermission,
                 hasNotifPermission,
+                hasContactsPermission,
                 isCleaning,
                 existingFilesCount,
                 cleaningDeletedCount,
@@ -287,6 +290,33 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
                     == PackageManager.PERMISSION_GRANTED;
         }
         return true;
+    }
+
+    private boolean checkHasContactsPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    @Override
+    public void onRequestContactsPermission() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS},
+                REQUEST_CODE_CONTACTS);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE_CONTACTS) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "通讯录权限已授予", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "未授予通讯录权限，联系人填充将无法执行", Toast.LENGTH_LONG).show();
+            }
+            updateUiState();
+        } else if (requestCode == REQUEST_CODE_NOTIF) {
+            updateUiState();
+        }
     }
 
     private void checkPermissions() {
@@ -333,9 +363,12 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
     @Override
     public void onContentTypeChange(@NonNull FillContentType type) {
         fillConfig.setContentType(type);
-        // 若切换为多媒体内容(JPG/MP4)，自动关闭碎片化模式，避免规格冲突
+        // 若切换为多媒体内容(JPG/MP4)或联系人，自动关闭碎片化模式，避免规格冲突
         if (type != FillContentType.RAW_FILE && type != FillContentType.MIXED) {
             fillConfig.setFragmentationMode(false);
+        }
+        if ((type == FillContentType.CONTACTS || type == FillContentType.MIXED) && !checkHasContactsPermission()) {
+            onRequestContactsPermission();
         }
         updateUiState();
     }
@@ -392,6 +425,13 @@ public class MainActivity extends ComponentActivity implements UiBridge.UiCallba
     public void onStartTask() {
         if (storageService == null) {
             Toast.makeText(this, "后台服务未连接，正在重试...", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if ((fillConfig.getContentType() == FillContentType.CONTACTS || fillConfig.getContentType() == FillContentType.MIXED)
+                && !checkHasContactsPermission()) {
+            Toast.makeText(this, "填充联系人需要通讯录权限，请先授予权限", Toast.LENGTH_LONG).show();
+            onRequestContactsPermission();
             return;
         }
 

@@ -142,6 +142,8 @@ public class FillConfig {
             return "合规 JPEG 图片";
         } else if (contentType == FillContentType.VIDEO) {
             return "标准 MP4 视频";
+        } else if (contentType == FillContentType.CONTACTS) {
+            return "电话联系人 (通讯录)";
         } else if (isFragmentationMode) {
             return "碎片化小文件 (" + getFragmentSizeLevel().getLabel() + ")";
         } else {

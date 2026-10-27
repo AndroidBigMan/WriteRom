@@ -32,6 +32,7 @@ object UiBridge {
         fun onCleanAll()
         fun onStopClean()
         fun onRequestStoragePermission()
+        fun onRequestContactsPermission()
         fun onFloatingHudToggle(enabled: Boolean)
         fun onRequestOverlayPermission()
     }
@@ -84,6 +85,7 @@ object UiBridge {
                         onCleanAll = { cb.onCleanAll() },
                         onStopClean = { cb.onStopClean() },
                         onRequestStoragePermission = { cb.onRequestStoragePermission() },
+                        onRequestContactsPermission = { cb.onRequestContactsPermission() },
                         onFloatingHudToggle = { cb.onFloatingHudToggle(it) },
                         onRequestOverlayPermission = { cb.onRequestOverlayPermission() }
                     )

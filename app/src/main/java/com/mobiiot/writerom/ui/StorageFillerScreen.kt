@@ -55,6 +55,7 @@ fun StorageFillerScreen(
     onCleanAll: () -> Unit,
     onStopClean: () -> Unit,
     onRequestStoragePermission: () -> Unit,
+    onRequestContactsPermission: () -> Unit,
     onFloatingHudToggle: (Boolean) -> Unit,
     onRequestOverlayPermission: () -> Unit
 ) {
@@ -148,6 +149,55 @@ fun StorageFillerScreen(
                                 colors = ButtonDefaults.buttonColors(containerColor = WarningAmber),
                                 shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier.bounceClickable(onClick = onRequestStoragePermission)
+                            ) {
+                                Text("去授权", fontSize = 13.sp, color = Color.Black, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+
+                // 通讯录权限提示横幅 (若当前选择了联系人或混合模式且未授予权限)
+                if ((uiState.contentType == FillContentType.CONTACTS || uiState.contentType == FillContentType.MIXED) && !uiState.hasContactsPermission) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .glassBorder(16.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = WarningAmber.copy(alpha = 0.15f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = "Warning",
+                                tint = WarningAmber,
+                                modifier = Modifier.size(30.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "需要通讯录写入权限",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "当前选择的模式包含联系人填充，需要通讯录写入权限以进行压力测试。",
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Button(
+                                onClick = onRequestContactsPermission,
+                                colors = ButtonDefaults.buttonColors(containerColor = WarningAmber),
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.bounceClickable(onClick = onRequestContactsPermission)
                             ) {
                                 Text("去授权", fontSize = 13.sp, color = Color.Black, fontWeight = FontWeight.Bold)
                             }
