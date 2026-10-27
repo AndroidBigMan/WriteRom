@@ -21,9 +21,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mobiiot.writerom.ui.StorageUiState
-import com.mobiiot.writerom.ui.theme.bounceClickable
-import com.mobiiot.writerom.ui.theme.glassBorder
+import com.mobiiot.writerom.ui.theme.*
 
+/**
+ * 方案 C: 现代流光工学派 (Neon Glassmorphic Hero Bento)
+ * 具备多段能量霓虹流光刻度规与毛玻璃 Bento 层级
+ */
 @Composable
 fun StorageOverviewCard(
     uiState: StorageUiState,
@@ -32,8 +35,8 @@ fun StorageOverviewCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .glassBorder(22.dp),
-        shape = RoundedCornerShape(22.dp),
+            .glassBorder(24.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -53,45 +56,70 @@ fun StorageOverviewCard(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                            .size(46.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(NeonCyan.copy(alpha = 0.22f), ElectricBlue.copy(alpha = 0.10f))
+                                )
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = "Storage",
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = NeonCyan,
                             modifier = Modifier.size(26.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "手机 ROM 存储状态",
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Column {
+                        Text(
+                            text = "手机 ROM 存储状态",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            letterSpacing = (-0.02).sp
+                        )
+                        Text(
+                            text = "底层物理介质空间实时感知",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                    modifier = Modifier.bounceClickable(onClick = {})
+                    color = NeonCyan.copy(alpha = 0.12f),
+                    modifier = Modifier
+                        .glassBorder(12.dp, 0.5.dp)
+                        .bounceClickable(onClick = {})
                 ) {
-                    Text(
-                        text = "总容量: ${uiState.formattedTotal}",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(NeonCyan)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "总物理容量: ${uiState.formattedTotal}",
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = NeonCyan
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 存储进度条与占比
+            // 存储进度条与占比计算
             val progressFraction = (uiState.percentUsed / 100.0).toFloat().coerceIn(0f, 1f)
             val animatedProgress by animateFloatAsState(
                 targetValue = progressFraction,
@@ -102,73 +130,82 @@ fun StorageOverviewCard(
                 label = "storageProgress"
             )
 
-            // 动态多段渐变色配置 (Neon Gradient Storage Gauge)
+            // 现代流光工学：多段能量光谱 (Neon Spectral Gradient)
             val gaugeGradientColors = when {
-                uiState.percentUsed < 85.0 -> listOf(
-                    Color(0xFF10B981), // Emerald
-                    Color(0xFF06B6D4), // Cyan
-                    Color(0xFF3B82F6)  // Electric Blue
+                uiState.percentUsed < 80.0 -> listOf(
+                    NeonEmerald,
+                    NeonCyan,
+                    ElectricBlue
                 )
-                uiState.percentUsed < 95.0 -> listOf(
-                    Color(0xFF10B981), // Emerald
-                    Color(0xFFF59E0B), // Amber
-                    Color(0xFFF97316)  // Orange
+                uiState.percentUsed < 92.0 -> listOf(
+                    NeonCyan,
+                    NeonAmber,
+                    Color(0xFFF97316)
                 )
                 else -> listOf(
-                    Color(0xFFF59E0B), // Amber
-                    Color(0xFFEF4444), // Crimson
-                    Color(0xFFF43F5E)  // Rose Red
+                    NeonAmber,
+                    NeonRose,
+                    Color(0xFFFF0055)
                 )
             }
 
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .clip(CircleShape)
-                            .background(gaugeGradientColors.last())
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .clip(CircleShape)
+                                .background(gaugeGradientColors.last())
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "已占用: ${uiState.formattedUsed}",
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                     Text(
-                        text = "已占用: ${uiState.formattedUsed} (${String.format("%.1f", uiState.percentUsed)}%)",
-                        fontSize = 15.5.sp,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold
+                        text = "${String.format("%.1f", uiState.percentUsed)}%",
+                        fontSize = 18.sp,
+                        color = gaugeGradientColors.last(),
+                        fontWeight = FontWeight.ExtraBold
                     )
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // 霓虹多段渐变进度条 (加高至 24dp，带顶部高光折射)
+                // 现代霓虹流光能量进度条 (带高光折射与呼吸圆角)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(24.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
-                        .glassBorder(cornerRadius = 12.dp, strokeWidth = 0.5.dp)
+                        .height(26.dp)
+                        .clip(RoundedCornerShape(13.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.50f))
+                        .glassBorder(cornerRadius = 13.dp, strokeWidth = 0.5.dp)
                 ) {
-                    // 渐变填充层
+                    // 渐变能量填充层
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(animatedProgress)
                             .fillMaxHeight()
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(RoundedCornerShape(13.dp))
                             .background(Brush.horizontalGradient(gaugeGradientColors))
                     ) {
-                        // 顶部微光高光层 (Glass reflection highlight)
+                        // 顶部液态高光微光反射 (Liquid Glass Top Specular)
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(8.dp)
+                                .height(9.dp)
                                 .background(
                                     Brush.verticalGradient(
                                         listOf(
-                                            Color.White.copy(alpha = 0.35f),
+                                            Color.White.copy(alpha = 0.38f),
                                             Color.Transparent
                                         )
                                     )
@@ -180,7 +217,7 @@ fun StorageOverviewCard(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // 底部 Bento 形式细项标签卡 (放大字号与触控区域)
+            // 底部 Bento 形式细项标签卡 (带双格微光描边)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -192,7 +229,7 @@ fun StorageOverviewCard(
                     modifier = Modifier.weight(1f)
                 )
                 BentoLegendPill(
-                    indicatorColor = Color(0xFF10B981),
+                    indicatorColor = NeonEmerald,
                     label = "当前可填充",
                     value = uiState.formattedFree,
                     modifier = Modifier.weight(1f)
@@ -210,14 +247,14 @@ private fun BentoLegendPill(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f),
         modifier = modifier
-            .glassBorder(14.dp)
+            .glassBorder(16.dp, 0.8.dp)
             .bounceClickable(onClick = {})
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -230,7 +267,7 @@ private fun BentoLegendPill(
             Column {
                 Text(
                     text = label,
-                    fontSize = 13.sp,
+                    fontSize = 12.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(2.dp))

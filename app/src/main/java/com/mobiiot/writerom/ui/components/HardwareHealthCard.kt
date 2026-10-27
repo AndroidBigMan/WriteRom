@@ -2,6 +2,7 @@ package com.mobiiot.writerom.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
@@ -10,14 +11,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mobiiot.writerom.ui.StorageUiState
-import com.mobiiot.writerom.ui.theme.bounceClickable
-import com.mobiiot.writerom.ui.theme.glassBorder
+import com.mobiiot.writerom.ui.theme.*
 
+/**
+ * 方案 C: 现代流光工学派 (Neon Hardware Health Bento)
+ * 芯片实时温度、系统热节流监测与闪存损耗 P/E 周期估算
+ */
 @Composable
 fun HardwareHealthCard(
     uiState: StorageUiState,
@@ -26,17 +31,17 @@ fun HardwareHealthCard(
     val temp = uiState.deviceTemperature
     val (tempColor, tempDesc) = when {
         temp <= 0f -> Pair(MaterialTheme.colorScheme.onSurfaceVariant, "温度读取中")
-        temp < 37.0f -> Pair(Color(0xFF10B981), "正常 (冷感)")
-        temp < 42.0f -> Pair(Color(0xFFF59E0B), "温升 (轻度负载)")
-        temp < 46.0f -> Pair(Color(0xFFF97316), "偏热 (高负载)")
-        else -> Pair(Color(0xFFEF4444), "高温 (触发主控保护)")
+        temp < 37.0f -> Pair(NeonEmerald, "正常 (冷感运行)")
+        temp < 42.0f -> Pair(NeonAmber, "温升 (轻度负载)")
+        temp < 46.0f -> Pair(Color(0xFFF97316), "偏热 (高负载工作)")
+        else -> Pair(NeonRose, "高温 (触发主控降频)")
     }
 
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .glassBorder(22.dp),
-        shape = RoundedCornerShape(22.dp),
+            .glassBorder(24.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -56,69 +61,94 @@ fun HardwareHealthCard(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                            .size(46.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(NeonEmerald.copy(alpha = 0.22f), NeonCyan.copy(alpha = 0.10f))
+                                )
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = "Hardware Health",
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = NeonEmerald,
                             modifier = Modifier.size(26.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "闪存健康与芯片感知",
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Column {
+                        Text(
+                            text = "闪存健康与芯片感知",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            letterSpacing = (-0.02).sp
+                        )
+                        Text(
+                            text = "热节流保护与 TBW 损耗周期",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                    modifier = Modifier.bounceClickable(onClick = {})
+                    shape = RoundedCornerShape(12.dp),
+                    color = NeonEmerald.copy(alpha = 0.12f),
+                    modifier = Modifier
+                        .glassBorder(12.dp, 0.6.dp)
+                        .bounceClickable(onClick = {})
                 ) {
-                    Text(
-                        text = "UFS / eMMC 状态",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(NeonEmerald)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "UFS / eMMC 状态巡检中",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = NeonEmerald
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // 温度与热状态 Bento 双格 (放大内部字号与尺寸)
+            // 温度与热状态 Bento 双格
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // 左格：实时核心温度
                 Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                    shape = RoundedCornerShape(18.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f),
                     modifier = Modifier
                         .weight(1f)
-                        .glassBorder(16.dp)
+                        .glassBorder(18.dp, 0.8.dp)
                         .bounceClickable(onClick = {})
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             text = "设备芯片温度",
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
                                 text = if (temp > 0f) String.format("%.1f", temp) else "--.-",
-                                fontSize = 30.sp,
+                                fontSize = 32.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = tempColor
                             )
@@ -127,13 +157,13 @@ fun HardwareHealthCard(
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = tempColor,
-                                modifier = Modifier.padding(bottom = 3.dp)
+                                modifier = Modifier.padding(bottom = 4.dp)
                             )
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = tempDesc,
-                            fontSize = 13.sp,
+                            fontSize = 12.5.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = tempColor
                         )
@@ -142,25 +172,25 @@ fun HardwareHealthCard(
 
                 // 右格：系统热节流状态
                 Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                    shape = RoundedCornerShape(18.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f),
                     modifier = Modifier
                         .weight(1f)
-                        .glassBorder(16.dp)
+                        .glassBorder(18.dp, 0.8.dp)
                         .bounceClickable(onClick = {})
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "系统热降频 (Throttling)",
-                            fontSize = 14.sp,
+                            text = "热节流 (Throttling)",
+                            fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = uiState.thermalStatusLabel,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (uiState.thermalStatusLevel >= 3) Color(0xFFEF4444) else MaterialTheme.colorScheme.onSurface
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = if (uiState.thermalStatusLevel >= 3) NeonRose else MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -168,7 +198,7 @@ fun HardwareHealthCard(
                                 "I/O 调度受温控限制"
                             else
                                 "闪存总线全速运行",
-                            fontSize = 13.sp,
+                            fontSize = 12.5.sp,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -180,21 +210,39 @@ fun HardwareHealthCard(
 
             // 闪存写入寿命感知 (TBW 与 P/E 周期估算 Bento 容器)
             Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f),
+                shape = RoundedCornerShape(18.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.30f),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .glassBorder(16.dp)
+                    .glassBorder(18.dp, 0.8.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "闪存损耗与寿命估算 (TBW)",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "闪存损耗与寿命估算 (TBW)",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = NeonPurple.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = "P/E Cycle",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = NeonPurple,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -202,31 +250,31 @@ fun HardwareHealthCard(
                     ) {
                         Column {
                             Text(
-                                text = "历史总写入量",
-                                fontSize = 13.sp,
+                                text = "累计总写入量",
+                                fontSize = 12.5.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(3.dp))
                             Text(
                                 text = uiState.formattedLifetimeBytes,
-                                fontSize = 17.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = NeonCyan
                             )
                         }
 
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "等效整盘 P/E 擦写周期",
-                                fontSize = 13.sp,
+                                text = "等效整盘擦写周期",
+                                fontSize = 12.5.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(3.dp))
                             Text(
                                 text = String.format("约 %.2f 次循环", uiState.estimatedPeCycles),
-                                fontSize = 17.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = NeonPurple
                             )
                         }
                     }

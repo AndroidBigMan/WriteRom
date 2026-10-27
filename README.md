@@ -153,6 +153,24 @@
 * **一键无损物理清除机制**：
   * 在一键清理流程中接入 `ContactsGenerator.cleanAllContacts()`，使用 `CALLER_IS_SYNCADAPTER=true` 安全干净地物理硬删除所有 WriteRom 生成的数据，零残留且绝不触及用户私人通讯录。
 
+### 15. 方案 C：现代流光工学派 (Neon Glassmorphic Bento) 与 4 大独立分页架构 (v1.8 重构)
+* **模块化 4-Tab 专属分页解耦**：
+  * 彻底打破单页上下堆叠冗长拥挤的传统布局，将界面系统解耦为 **4 大专注职能的独立 Tab 分页**：
+    * `📊 全景监控 (Monitor)`：聚焦全盘占用率环形仪（Hero Bento）、4 宫格实时填充面板与硬件芯片温控感知；
+    * `📈 性能示波 (Performance)`：全尺寸平滑贝塞尔示波器 Canvas、SLC 缓存模拟爆发（$750\sim 820$ MB/s）与 TLC 原生直写（$220\sim 260$ MB/s）深度生命周期诊断；
+    * `⚙️ 填充策略 (Strategy)`：阈值余量/百分比/体积滑块、全介质选择（文件/相册/视频/联系人/混合）、多线程并发与碎片打孔；
+    * `🛠 空间工具 (Tools)`：一键全量清理释放、全局微型悬浮仪表盘管理、F2FS 底层文件系统与扇区挂载诊断。
+* **现代流光微光色谱 (Neon Spectral Palette)**：
+  * 黑曜深灰基底（`#080C14` / `#111726`）配合多色段能量流光（青蓝 `#00D2FF`、翡翠绿 `#10B981`、琥珀金 `#F59E0B`、霓虹玫瑰 `#FF0055`、电光蓝 `#0077FF`）。
+* **Glassmorphism 2.0 液体高光质感**：
+  * 全卡片升级为 24dp Bento 圆角结合 1dp 垂直微光渐变描边（`glassBorder`，顶部 18% 捕获环境光，下部自然隐退）。
+* **跨页面常驻悬浮控制岛 (Sticky Bottom Action Island)**：
+  * 悬浮于底部导航栏之上（距底 74dp），用户在任何分页浏览时均可实时查看瞬时速率并随时触发开始 / 暂停 / 恢复 / 终止。
+* **现代毛玻璃底部导航栏 (Bottom Navigation Bar)**：
+  * 纯代码绘制自适应轻量矢量图标（`TabVectorIcon`），零外部依赖，极速响应与流光高亮。
+* **设计原型与交互演示套件**：
+  * 在 `design-prototypes/` 目录下提供完整高保真单页与多 Tab 分页交互原型（HTML + Web Audio API）。
+
 ---
 
 ## 🏗️ 架构设计
@@ -238,6 +256,11 @@ WriteRom/
 │   │   └── AndroidManifest.xml  # 权限声明与前台服务配置
 │   └── build.gradle
 ├── assets/                      # 项目 Logo (assets/logo.svg)
+├── design-prototypes/           # [花叔 Design] 交互原型套件 (单页与多Tab分页 HTML 演示)
+│   ├── preview_scheme_c_multipage.html
+│   ├── preview_scheme_c_refactored.html
+│   ├── write_rom_design_directions.html
+│   └── directions.md
 ├── build.gradle
 ├── gradle.properties            # 脱敏构建属性（去除本机私有路径）
 ├── settings.gradle

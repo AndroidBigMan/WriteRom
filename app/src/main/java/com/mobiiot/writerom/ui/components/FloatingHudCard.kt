@@ -1,6 +1,7 @@
 package com.mobiiot.writerom.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -15,14 +16,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mobiiot.writerom.ui.StorageUiState
-import com.mobiiot.writerom.ui.theme.AccentCyan
-import com.mobiiot.writerom.ui.theme.SuccessGreen
-import com.mobiiot.writerom.ui.theme.WarningAmber
+import com.mobiiot.writerom.ui.theme.DarkGlassSurface
+import com.mobiiot.writerom.ui.theme.DarkSurface
+import com.mobiiot.writerom.ui.theme.NeonAmber
+import com.mobiiot.writerom.ui.theme.NeonCyan
+import com.mobiiot.writerom.ui.theme.NeonEmerald
 import com.mobiiot.writerom.ui.theme.bounceClickable
 import com.mobiiot.writerom.ui.theme.glassBorder
 
 /**
  * 全局悬浮微型仪表盘 (Floating HUD) 开关与配置卡片
+ * Direction C: Modern Neon Glassmorphic Bento
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -35,12 +39,10 @@ fun FloatingHudCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .glassBorder(22.dp),
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .glassBorder(24.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkGlassSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(22.dp)) {
             // 标题行与开关
@@ -55,16 +57,17 @@ fun FloatingHudCard(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(38.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(AccentCyan.copy(alpha = 0.15f)),
+                            .background(NeonCyan.copy(alpha = 0.12f))
+                            .border(1.dp, NeonCyan.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = "Floating HUD",
-                            tint = AccentCyan,
-                            modifier = Modifier.size(26.dp)
+                            tint = NeonCyan,
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(12.dp))
@@ -72,28 +75,29 @@ fun FloatingHudCard(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = "全局悬浮微型仪表盘",
-                                fontSize = 19.sp,
-                                fontWeight = FontWeight.Bold
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                color = if (uiState.isFloatingHudEnabled) SuccessGreen.copy(alpha = 0.18f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                                color = if (uiState.isFloatingHudEnabled) NeonEmerald.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.08f)
                             ) {
                                 Text(
                                     text = if (uiState.isFloatingHudEnabled) "已开启" else "已关闭",
-                                    color = if (uiState.isFloatingHudEnabled) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 13.sp,
+                                    color = if (uiState.isFloatingHudEnabled) NeonEmerald else Color.White.copy(alpha = 0.6f),
+                                    fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                                 )
                             }
                         }
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "切至其他应用时实时置顶监控与控制",
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            fontSize = 13.sp,
+                            color = Color.White.copy(alpha = 0.65f)
                         )
                     }
                 }
@@ -110,8 +114,10 @@ fun FloatingHudCard(
                         }
                     },
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.White,
-                        checkedTrackColor = AccentCyan
+                        checkedThumbColor = Color(0xFF040D1A),
+                        checkedTrackColor = NeonCyan,
+                        uncheckedThumbColor = Color.White.copy(alpha = 0.6f),
+                        uncheckedTrackColor = DarkSurface
                     )
                 )
             }
@@ -121,7 +127,7 @@ fun FloatingHudCard(
                 Spacer(modifier = Modifier.height(14.dp))
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = WarningAmber.copy(alpha = 0.12f),
+                    color = NeonAmber.copy(alpha = 0.12f),
                     modifier = Modifier
                         .fillMaxWidth()
                         .glassBorder(14.dp)
@@ -135,20 +141,20 @@ fun FloatingHudCard(
                         Text(
                             text = "需要悬浮窗权限以在其他 App 上方绘制",
                             fontSize = 13.5.sp,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.weight(1f)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Button(
                             onClick = onRequestPermission,
-                            colors = ButtonDefaults.buttonColors(containerColor = WarningAmber),
+                            colors = ButtonDefaults.buttonColors(containerColor = NeonAmber),
                             shape = RoundedCornerShape(10.dp),
                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
                             modifier = Modifier
                                 .height(36.dp)
                                 .bounceClickable(onClick = onRequestPermission)
                         ) {
-                            Text("去授权", fontSize = 13.sp, color = Color.Black, fontWeight = FontWeight.Bold)
+                            Text("去授权", fontSize = 13.sp, color = Color(0xFF040D1A), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -156,7 +162,7 @@ fun FloatingHudCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 特性徽标流式标签 (放大尺寸)
+            // 特性徽标流式标签
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -175,16 +181,16 @@ fun FloatingHudCard(
 private fun HudFeatureChip(text: String) {
     Surface(
         shape = RoundedCornerShape(10.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+        color = DarkSurface.copy(alpha = 0.6f),
         modifier = Modifier
             .glassBorder(10.dp)
             .bounceClickable(onClick = {})
     ) {
         Text(
             text = text,
-            fontSize = 13.sp,
+            fontSize = 12.5.sp,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = Color.White.copy(alpha = 0.7f),
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
         )
     }

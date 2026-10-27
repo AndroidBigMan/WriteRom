@@ -1,6 +1,7 @@
 package com.mobiiot.writerom.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -10,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -17,10 +19,18 @@ import androidx.compose.ui.unit.sp
 import com.mobiiot.writerom.model.FillMode
 import com.mobiiot.writerom.model.TaskStatus
 import com.mobiiot.writerom.ui.StorageUiState
+import com.mobiiot.writerom.ui.theme.DarkGlassSurface
+import com.mobiiot.writerom.ui.theme.DarkSurface
+import com.mobiiot.writerom.ui.theme.ElectricBlue
+import com.mobiiot.writerom.ui.theme.NeonCyan
 import com.mobiiot.writerom.ui.theme.bounceClickable
 import com.mobiiot.writerom.ui.theme.glassBorder
 import com.mobiiot.writerom.utils.StorageHelper
 
+/**
+ * 填充阈值与策略设置卡片
+ * Direction C: Modern Neon Glassmorphic Bento
+ */
 @Composable
 fun ThresholdConfigCard(
     uiState: StorageUiState,
@@ -35,10 +45,10 @@ fun ThresholdConfigCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .glassBorder(22.dp),
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .glassBorder(24.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkGlassSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -51,16 +61,17 @@ fun ThresholdConfigCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(38.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                        .background(NeonCyan.copy(alpha = 0.12f))
+                        .border(1.dp, NeonCyan.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Settings,
                         contentDescription = "Threshold",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(26.dp)
+                        tint = NeonCyan,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
@@ -68,20 +79,20 @@ fun ThresholdConfigCard(
                     text = "填充阈值与策略设置",
                     fontSize = 19.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = Color.White
                 )
             }
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // 模式选择分段组件 (加大触控区域与字号)
+            // 模式选择分段组件
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+                    .background(DarkSurface.copy(alpha = 0.85f))
                     .glassBorder(14.dp)
-                    .padding(5.dp)
+                    .padding(4.dp)
             ) {
                 FillMode.values().forEach { mode ->
                     val isSelected = uiState.fillMode == mode
@@ -91,16 +102,16 @@ fun ThresholdConfigCard(
                             .weight(1f)
                             .clip(RoundedCornerShape(10.dp))
                             .background(
-                                if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+                                if (isSelected) Brush.horizontalGradient(listOf(NeonCyan, ElectricBlue)) else Brush.linearGradient(listOf(Color.Transparent, Color.Transparent))
                             )
                             .bounceClickable(enabled = !isRunning) { onModeChange(mode) }
-                            .padding(vertical = 12.dp)
+                            .padding(vertical = 11.dp)
                     ) {
                         Text(
                             text = mode.displayName,
-                            fontSize = 14.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                            fontSize = 13.5.sp,
+                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                            color = if (isSelected) Color(0xFF040D1A) else Color.White.copy(alpha = 0.65f)
                         )
                     }
                 }
@@ -108,7 +119,7 @@ fun ThresholdConfigCard(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 针对不同模式的具体滑块与设置 (精简冗余文字，放大主标签与数值)
+            // 针对不同模式的具体滑块与设置
             when (uiState.fillMode) {
                 FillMode.TARGET_REMAINING_SPACE -> {
                     val maxRemainingGb = (uiState.freeBytes / (1024.0 * 1024 * 1024)).toFloat()
@@ -122,15 +133,15 @@ fun ThresholdConfigCard(
                         ) {
                             Text(
                                 text = "目标保留剩余空间",
-                                fontSize = 16.sp,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = Color.White
                             )
                             Text(
                                 text = if (uiState.targetRemainingBytes <= 0) "0 MB (极限填满)" else StorageHelper.formatSize(uiState.targetRemainingBytes),
                                 fontSize = 16.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                fontWeight = FontWeight.ExtraBold,
+                                color = NeonCyan
                             )
                         }
 
@@ -144,6 +155,11 @@ fun ThresholdConfigCard(
                             },
                             valueRange = 0f..maxRemainingGb.coerceAtLeast(0.1f),
                             enabled = !isRunning,
+                            colors = SliderDefaults.colors(
+                                thumbColor = NeonCyan,
+                                activeTrackColor = NeonCyan,
+                                inactiveTrackColor = DarkSurface
+                            ),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -158,15 +174,15 @@ fun ThresholdConfigCard(
                         ) {
                             Text(
                                 text = "目标总占用百分比",
-                                fontSize = 16.sp,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = Color.White
                             )
                             Text(
                                 text = "${uiState.targetPercentage}%",
                                 fontSize = 17.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                fontWeight = FontWeight.ExtraBold,
+                                color = NeonCyan
                             )
                         }
 
@@ -178,6 +194,11 @@ fun ThresholdConfigCard(
                             onValueChange = { onPercentageChange(it.toInt()) },
                             valueRange = minPercent.toFloat()..100f,
                             enabled = !isRunning,
+                            colors = SliderDefaults.colors(
+                                thumbColor = NeonCyan,
+                                activeTrackColor = NeonCyan,
+                                inactiveTrackColor = DarkSurface
+                            ),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -195,15 +216,15 @@ fun ThresholdConfigCard(
                         ) {
                             Text(
                                 text = "指定填充数据量",
-                                fontSize = 16.sp,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = Color.White
                             )
                             Text(
                                 text = StorageHelper.formatSize(uiState.targetSpecificSizeBytes),
                                 fontSize = 17.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                fontWeight = FontWeight.ExtraBold,
+                                color = NeonCyan
                             )
                         }
 
@@ -217,6 +238,11 @@ fun ThresholdConfigCard(
                             },
                             valueRange = 0.1f..maxFillGb.coerceAtLeast(0.1f),
                             enabled = !isRunning,
+                            colors = SliderDefaults.colors(
+                                thumbColor = NeonCyan,
+                                activeTrackColor = NeonCyan,
+                                inactiveTrackColor = DarkSurface
+                            ),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -225,10 +251,10 @@ fun ThresholdConfigCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 预估填充体积反馈条 (放大字号)
+            // 预估填充体积反馈条
             Surface(
                 shape = RoundedCornerShape(14.dp),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                color = NeonCyan.copy(alpha = 0.08f),
                 modifier = Modifier
                     .fillMaxWidth()
                     .glassBorder(14.dp)
@@ -242,15 +268,15 @@ fun ThresholdConfigCard(
                 ) {
                     Text(
                         text = "本次预计将填充体积",
-                        fontSize = 15.sp,
+                        fontSize = 14.5.sp,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = Color.White.copy(alpha = 0.8f)
                     )
                     Text(
                         text = uiState.formattedEstimatedFill,
                         fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        fontWeight = FontWeight.ExtraBold,
+                        color = NeonCyan
                     )
                 }
             }

@@ -8,10 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryBlue,
-    onPrimary = Color.White,
-    secondary = AccentCyan,
-    onSecondary = Color.Black,
+    primary = NeonCyan,
+    onPrimary = Color.Black,
+    secondary = NeonPurple,
+    onSecondary = Color.White,
+    tertiary = NeonAmber,
+    onTertiary = Color.Black,
     background = DarkBackground,
     surface = DarkSurface,
     surfaceVariant = DarkCard,
@@ -26,6 +28,8 @@ private val LightColorScheme = lightColorScheme(
     onPrimary = Color.White,
     secondary = AccentCyan,
     onSecondary = Color.White,
+    tertiary = WarningAmber,
+    onTertiary = Color.White,
     background = Color(0xFFF7F8FA),
     surface = Color.White,
     surfaceVariant = Color(0xFFEDF2F7),
